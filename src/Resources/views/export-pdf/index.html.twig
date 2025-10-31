@@ -1,0 +1,70 @@
+<style>
+    .header {
+        display: flex;
+    }
+
+    .table-body {
+        margin-top: 20px;
+    }
+
+    .price-body {
+        margin-top: 20px;
+    }
+
+    th {
+        text-align: center;
+    }
+</style>
+<script>
+    window.print();
+</script>
+
+<div class="container-fluid">
+    <div class="body">
+        <h2 style="text-align: center">订单信息</h2>
+        <div class="header">
+            <table width="100%" align="left" cellpadding="10">
+                <tr>
+                    <td>订单编号：{{ order.order_sn }}</td>
+                    <td>下单时间 {{ order.create_time }}</td>
+                    <td>支付方式：{{ order.pay_type_text }}</td>
+                </tr>
+                <tr>
+                    <td>运单号：{{ order.express_sn }}</td>
+                    <td>发货时间：{{ send_time }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3">发货地址：{{ order_address }}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="table-body">
+            <table width="100%" align="center" border="1" cellpadding="10">
+                <tr>
+                    <th width="40%" align="center">商品名称</th>
+                    <th width="15%" align="center">商品规格</th>
+                    <th width="15%" align="center">商品价格</th>
+                    <th width="15%" align="center">商品数量</th>
+                    <th width="15%" align="center">小计</th>
+                </tr>
+                <tbody>
+                {% for row in order.goods_list %}
+                    <tr>
+                        <td align="center">{{ row.title }}<span style="color: red; margin-left: 10px;">{{ row.statusText }}</span></td>
+                        <td align="center">{{ row.sku_name }}</td>
+                        <td align="center">{{ row.market_price }}</td>
+                        <td align="center">{{ row.total }}</td>
+                        <td align="center">{{ row.total_price }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="price-body">
+            <div style="text-align: right">商品总金额：{{ goods_price }}</div>
+            <div style="text-align: right">配送费：{{ order.dispatch_price }}</div>
+            <div style="text-align: right">实付金额：{{ order.price }}</div>
+        </div>
+    </div>
+
+</div>

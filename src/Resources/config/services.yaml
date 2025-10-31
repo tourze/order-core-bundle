@@ -1,0 +1,22 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: true
+
+  OrderCoreBundle\Counter\:
+    resource: '../../Counter/'
+  OrderCoreBundle\Repository\:
+    resource: '../../Repository/'
+  OrderCoreBundle\Command\:
+    resource: '../../Command/'
+  OrderCoreBundle\Controller\:
+    resource: '../../Controller/'
+  OrderCoreBundle\EventSubscriber\:
+    resource: '../../EventSubscriber/'
+  OrderCoreBundle\Procedure\:
+    resource: '../../Procedure/'
+  OrderCoreBundle\Service\:
+    resource: '../../Service/'
+
+  Tourze\YieldBreakableCaller\BreakableCaller: ~

@@ -1,0 +1,22 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+消费者 -> API服务: 请求创建订单，数量100
+API服务 -> 库存模块: 查询当前库存数量
+库存模块 -> API服务: 当前库存不足
+API服务 -> 消费者: 库存不足，创单失败
+
+autonumber
+消费者 -> API服务: 请求创建订单，数量50
+API服务 -> 库存模块: 查询当前库存数量
+库存模块 -> 库存模块: 数量50还有余量
+库存模块 -> 库存模块: UPDATE stock SET lock = lock + 50 WHERE spu = 1 AND (total >= (sold + lock + 50))
+库存模块 -> 库存模块: 如库存已不足，WHERE条件失败，则UPDATE语句的Affect Rows等于0
+库存模块 -> API服务: 库存预扣成功
+API服务 -> 消费者: 创单成功
+消费者 -> API服务: 支付订单成功
+API服务 -> 库存模块: 支付成功，预扣转已扣
+库存模块 -> 库存模块: UPDATE stock SET lock = lock - 50, sold = sold + 50 WHERE spu = 1
+
+@enduml
