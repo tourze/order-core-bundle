@@ -64,7 +64,7 @@
     "tourze/easy-admin-attribute": "0.1.*",
     "tourze/easy-admin-extra-bundle": "0.1.*",
     "tourze/easy-admin-menu-bundle": "0.1.*",
-    "tourze/enum-extra": "0.1.*",
+    "tourze/enum-extra": "1.*",
     "tourze/freight-template-bundle": "0.0.*",
     "tourze/gb-t-2261": "0.0.*",
     "tourze/http-client-bundle": "0.1.*",
@@ -88,7 +88,7 @@
     "tourze/symfony-aop-bundle": "~0.0.4",
     "tourze/symfony-aop-doctrine-bundle": "0.0.*",
     "tourze/symfony-cron-job-bundle": "0.1.*",
-    "tourze/symfony-dependency-service-loader": "0.0.*",
+    "tourze/symfony-dependency-service-loader": "1.*",
     "tourze/symfony-routing-auto-loader-bundle": "0.0.*",
     "tourze/symfony-snowflake-bundle": "0.0.*",
     "tourze/symfony-temp-file-bundle": "0.0.*",
@@ -107,12 +107,11 @@
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^11.5",
     "tourze/phpunit-base": "1.*",
-    "tourze/phpunit-doctrine-entity": "0.0.*",
-    "tourze/phpunit-enum": "0.0.*",
+    "tourze/phpunit-doctrine-entity": "1.*",
+    "tourze/phpunit-enum": "1.*",
     "tourze/phpunit-symfony-kernel-test": "0.0.*",
-    "tourze/phpunit-symfony-unit-test": "0.0.*",
-    "tourze/phpunit-symfony-web-test": "0.0.*",
-    "tourze/symfony-testing-framework": "0.0.*"
+    "tourze/phpunit-symfony-unit-test": "1.*",
+    "tourze/phpunit-symfony-web-test": "0.0.*"
   },
   "autoload": {
     "psr-4": {
