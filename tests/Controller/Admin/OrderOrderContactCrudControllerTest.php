@@ -79,8 +79,7 @@ final class OrderOrderContactCrudControllerTest extends AbstractEasyAdminControl
 
     public function testIndex(): void
     {
-        $client = self::createClientWithDatabase();
-        $this->loginAsAdmin($client);
+        $client = self::createAuthenticatedClient();
         $client->request('GET', '/admin');
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
     }

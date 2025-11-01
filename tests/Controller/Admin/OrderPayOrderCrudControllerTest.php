@@ -53,8 +53,7 @@ final class OrderPayOrderCrudControllerTest extends AbstractEasyAdminControllerT
 
     public function testIndex(): void
     {
-        $client = self::createClientWithDatabase();
-        $this->loginAsAdmin($client);
+        $client = self::createAuthenticatedClient();
         $client->request('GET', '/admin');
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
     }
@@ -64,8 +63,7 @@ final class OrderPayOrderCrudControllerTest extends AbstractEasyAdminControllerT
      */
     public function testValidationErrors(): void
     {
-        $client = self::createClientWithDatabase();
-        $this->loginAsAdmin($client);
+        $client = self::createAuthenticatedClient();
 
         // 首先创建一些Contract实体，以便表单中的关联字段有选项可选
         /** @var EntityManagerInterface $entityManager */
