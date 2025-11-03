@@ -13,6 +13,7 @@ use Tourze\DoctrineAsyncInsertBundle\DoctrineAsyncInsertBundle;
 use Tourze\DoctrineIndexedBundle\DoctrineIndexedBundle;
 use Tourze\DoctrineSnowflakeBundle\DoctrineSnowflakeBundle;
 use Tourze\DoctrineTimestampBundle\DoctrineTimestampBundle;
+use Tourze\EasyAdminMenuBundle\EasyAdminMenuBundle;
 use Tourze\FreightTemplateBundle\FreightTemplateBundle;
 use Tourze\JsonRPCLockBundle\JsonRPCLockBundle;
 use Tourze\JsonRPCSecurityBundle\JsonRPCSecurityBundle;
@@ -49,6 +50,7 @@ class OrderCoreBundle extends Bundle implements BundleDependencyInterface
             RoutingAutoLoaderBundle::class => ['all' => true],
             JsonRPCSecurityBundle::class => ['all' => true],
             CounterBundle::class => ['all' => true],
+            EasyAdminMenuBundle::class => ['all' => true],
         ];
     }
 }
