@@ -14,10 +14,8 @@ use Tourze\DoctrineIndexedBundle\DoctrineIndexedBundle;
 use Tourze\DoctrineSnowflakeBundle\DoctrineSnowflakeBundle;
 use Tourze\DoctrineTimestampBundle\DoctrineTimestampBundle;
 use Tourze\EasyAdminMenuBundle\EasyAdminMenuBundle;
-use Tourze\FreightTemplateBundle\FreightTemplateBundle;
 use Tourze\JsonRPCLockBundle\JsonRPCLockBundle;
 use Tourze\JsonRPCSecurityBundle\JsonRPCSecurityBundle;
-use Tourze\OrderCheckoutBundle\OrderCheckoutBundle;
 use Tourze\ProductCoreBundle\ProductCoreBundle;
 use Tourze\ProductLimitRuleBundle\ProductLimitRuleBundle;
 use Tourze\RoutingAutoLoaderBundle\RoutingAutoLoaderBundle;
@@ -40,13 +38,11 @@ class OrderCoreBundle extends Bundle implements BundleDependencyInterface
             SecurityBundle::class => ['all' => true],
             DoctrineAsyncInsertBundle::class => ['all' => true],
             HttpClientBundle::class => ['all' => true],
-            OrderCheckoutBundle::class => ['all' => true],
             OrderLimitBundle::class => ['all' => true],
             ProductCoreBundle::class => ['all' => true],
             ProductLimitRuleBundle::class => ['all' => true],
             TempFileBundle::class => ['all' => true],
             DoctrineBundle::class => ['all' => true],
-            FreightTemplateBundle::class => ['all' => true],
             RoutingAutoLoaderBundle::class => ['all' => true],
             JsonRPCSecurityBundle::class => ['all' => true],
             CounterBundle::class => ['all' => true],
