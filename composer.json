@@ -90,7 +90,6 @@
     "tourze/text-manage-bundle": "1.0.*",
     "tourze/user-event-bundle": "1.0.*",
     "tourze/user-id-bundle": "1.0.*",
-    "tourze/wechat-mini-program-bundle": "0.1.*",
     "tourze/weui-bundle": "1.0.*",
     "tourze/yield-breakable-caller": "0.0.*",
     "yiisoft/arrays": "^3",
