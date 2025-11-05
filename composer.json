@@ -73,7 +73,6 @@
     "tourze/json-rpc-security-bundle": "1.0.*",
     "tourze/lock-service-bundle": "1.0.*",
     "tourze/order-contracts": "1.0.*",
-    "tourze/order-limit-bundle": "0.0.*",
     "tourze/payment-contracts": "1.0.*",
     "tourze/product-core-bundle": "1.0.*",
     "tourze/product-limit-rule-bundle": "0.0.*",
