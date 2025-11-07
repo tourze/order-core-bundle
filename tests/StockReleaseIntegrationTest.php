@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Tourze\PHPUnitSymfonyKernelTest\AbstractEventSubscriberTestCase;
-use Tourze\UserIDBundle\Model\SystemUser;
+use Tourze\UserServiceContracts\UserManagerInterface;
 
 /**
  * 集成测试：验证订单取消时库存释放是否正常工作
@@ -60,9 +60,17 @@ final class StockReleaseIntegrationTest extends AbstractEventSubscriberTestCase
         }
 
         // 取消订单
+        // Create a system user for test
+        $userManager = self::getService(UserManagerInterface::class);
+        $systemUser = $userManager->createUser(
+            userIdentifier: 'system',
+            password: '',
+            roles: ['ROLE_SYSTEM']
+        );
+
         $this->contractService->cancelOrder(
             $contract,
-            SystemUser::instance(),
+            $systemUser,
             '测试取消订单'
         );
 

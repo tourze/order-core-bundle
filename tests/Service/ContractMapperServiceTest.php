@@ -76,12 +76,20 @@ final class ContractMapperServiceTest extends AbstractIntegrationTestCase
         $createTime = new \DateTimeImmutable('2024-01-15 10:30:00');
         $updateTime = new \DateTimeImmutable('2024-01-16 14:45:00');
 
-        $contract = $this->createMock(Contract::class);
-        $contract->method('getId')->willReturn(456);
-        $contract->method('getSn')->willReturn('CONTRACT-20240115-001');
-        $contract->method('getRemark')->willReturn('Test contract remark');
-        $contract->method('getCreateTime')->willReturn($createTime);
-        $contract->method('getUpdateTime')->willReturn($updateTime);
+        $contract = new Contract();
+        $contract->setSn('CONTRACT-20240115-001');
+        $contract->setRemark('Test contract remark');
+
+        // Use reflection to set private timestamp properties
+        $reflection = new \ReflectionClass($contract);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($contract, 456);
+
+        $createTimeProperty = $reflection->getProperty('createTime');
+        $createTimeProperty->setValue($contract, $createTime);
+
+        $updateTimeProperty = $reflection->getProperty('updateTime');
+        $updateTimeProperty->setValue($contract, $updateTime);
 
         // Act
         $result = $this->contractMapperService->mapPlainArray($contract);
@@ -106,12 +114,16 @@ final class ContractMapperServiceTest extends AbstractIntegrationTestCase
     public function testMapPlainArrayWithNullDateTimesShouldHandleGracefully(): void
     {
         // Arrange
-        $contract = $this->createMock(Contract::class);
-        $contract->method('getId')->willReturn(789);
-        $contract->method('getSn')->willReturn('CONTRACT-NULL-DATES');
-        $contract->method('getRemark')->willReturn(null);
-        $contract->method('getCreateTime')->willReturn(null);
-        $contract->method('getUpdateTime')->willReturn(null);
+        $contract = new Contract();
+        $contract->setSn('CONTRACT-NULL-DATES');
+        $contract->setRemark(null);
+
+        // Use reflection to set private properties
+        $reflection = new \ReflectionClass($contract);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($contract, 789);
+
+        // createTime and updateTime remain null by default
 
         // Act
         $result = $this->contractMapperService->mapPlainArray($contract);
@@ -127,12 +139,14 @@ final class ContractMapperServiceTest extends AbstractIntegrationTestCase
     public function testMapPlainArrayWithEmptyStringShouldReturnSameValue(): void
     {
         // Arrange
-        $contract = $this->createMock(Contract::class);
-        $contract->method('getId')->willReturn(100);
-        $contract->method('getSn')->willReturn('');
-        $contract->method('getRemark')->willReturn('');
-        $contract->method('getCreateTime')->willReturn(null);
-        $contract->method('getUpdateTime')->willReturn(null);
+        $contract = new Contract();
+        $contract->setSn('');
+        $contract->setRemark('');
+
+        // Use reflection to set private properties
+        $reflection = new \ReflectionClass($contract);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($contract, 100);
 
         // Act
         $result = $this->contractMapperService->mapPlainArray($contract);

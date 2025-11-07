@@ -23,7 +23,7 @@ use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPC\Core\Procedure\BaseProcedure;
 use Tourze\OrderContracts\Event\CheckOrderRefundableEvent;
 use Tourze\OrderContracts\Event\GetOrderDetailEvent;
-use Tourze\UserIDBundle\Model\SystemUser;
+use Tourze\UserServiceContracts\UserManagerInterface;
 
 #[MethodTag(name: '订单管理')]
 #[MethodDoc(summary: '获取单个订单的信息')]
@@ -40,6 +40,7 @@ class GetOrderDetail extends BaseProcedure
         private readonly NormalizerInterface $normalizer,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly PriceService $priceService,
+        private readonly UserManagerInterface $userManager,
     ) {
     }
 
@@ -77,7 +78,14 @@ class GetOrderDetail extends BaseProcedure
         if (null !== $currentUser) {
             $event->setSender($currentUser);
         }
-        $event->setReceiver(SystemUser::instance());
+
+        // Create a system user for event receiver
+        $systemUser = $this->userManager->createUser(
+            userIdentifier: 'system',
+            password: '',
+            roles: ['ROLE_SYSTEM']
+        );
+        $event->setReceiver($systemUser);
         $this->eventDispatcher->dispatch($event);
 
         return $event->getResult();

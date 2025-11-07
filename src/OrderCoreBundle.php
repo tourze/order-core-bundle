@@ -17,6 +17,7 @@ use Tourze\JsonRPCLockBundle\JsonRPCLockBundle;
 use Tourze\JsonRPCSecurityBundle\JsonRPCSecurityBundle;
 use Tourze\ProductCoreBundle\ProductCoreBundle;
 use Tourze\RoutingAutoLoaderBundle\RoutingAutoLoaderBundle;
+use Tourze\StockManageBundle\StockManageBundle;
 use Tourze\Symfony\CronJob\CronJobBundle;
 use Tourze\TempFileBundle\TempFileBundle;
 
@@ -37,6 +38,7 @@ class OrderCoreBundle extends Bundle implements BundleDependencyInterface
             DoctrineAsyncInsertBundle::class => ['all' => true],
             HttpClientBundle::class => ['all' => true],
             ProductCoreBundle::class => ['all' => true],
+            StockManageBundle::class => ['all' => true],
             TempFileBundle::class => ['all' => true],
             DoctrineBundle::class => ['all' => true],
             RoutingAutoLoaderBundle::class => ['all' => true],

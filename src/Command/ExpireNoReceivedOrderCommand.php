@@ -14,7 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Tourze\Symfony\CronJob\Attribute\AsCronTask;
-use Tourze\UserIDBundle\Model\SystemUser;
+use Tourze\UserServiceContracts\UserManagerInterface;
 
 #[AsCronTask(expression: '*/15 * * * *')]
 #[AsCommand(name: self::NAME, description: '将发货但有结束收货时间的订单拉出来处理')]
@@ -26,6 +26,7 @@ class ExpireNoReceivedOrderCommand extends Command
         private readonly ContractRepository $contractRepository,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly EntityManagerInterface $entityManager,
+        private readonly UserManagerInterface $userManager,
     ) {
         parent::__construct();
     }
@@ -54,9 +55,16 @@ class ExpireNoReceivedOrderCommand extends Command
 
             $user = $order->getUser();
             if (null !== $user) {
+                // Create a system user for automated operations
+                $systemUser = $this->userManager->createUser(
+                    userIdentifier: 'system',
+                    password: '',
+                    roles: ['ROLE_SYSTEM']
+                );
+
                 $event = new AutoExpireOrderStateEvent();
                 $event->setContract($order);
-                $event->setSender(SystemUser::instance());
+                $event->setSender($systemUser);
                 $event->setReceiver($user);
                 $this->eventDispatcher->dispatch($event);
             }

@@ -9,7 +9,7 @@ use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Enum\OrderState;
 use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Tourze\DoctrineResolveTargetEntityBundle\Service\ResolveTargetEntityService;
+use Tourze\UserServiceContracts\UserManagerInterface;
 
 /**
  * 订单合同数据填充
@@ -26,7 +26,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
     public const CONTRACT_CANCELED = 'contract-canceled';
 
     public function __construct(
-        private readonly ResolveTargetEntityService $resolveTargetEntityService,
+        private readonly UserManagerInterface $userManager,
     ) {
     }
 
@@ -39,7 +39,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $pendingContract->setState(OrderState::INIT);
         $pendingContract->setOutTradeNo('OUT' . time() . '001');
         $pendingContract->setRemark('测试待支付订单');
-        $pendingContract->setUser($this->createMockUser());
+        $pendingContract->setUser($this->getOrCreateTestUser());
         $pendingContract->setAutoCancelTime(new \DateTimeImmutable('+30 minutes'));
 
         $manager->persist($pendingContract);
@@ -51,7 +51,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $paidContract->setState(OrderState::PAID);
         $paidContract->setOutTradeNo('OUT' . time() . '002');
         $paidContract->setRemark('测试已支付订单');
-        $paidContract->setUser($this->createMockUser());
+        $paidContract->setUser($this->getOrCreateTestUser());
         // 供应商审核功能已废弃
 
         $manager->persist($paidContract);
@@ -63,7 +63,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $shippedContract->setState(OrderState::SHIPPED);
         $shippedContract->setOutTradeNo('OUT' . time() . '003');
         $shippedContract->setRemark('测试已发货订单');
-        $shippedContract->setUser($this->createMockUser());
+        $shippedContract->setUser($this->getOrCreateTestUser());
         $shippedContract->setStartReceiveTime(new \DateTimeImmutable('-2 hours'));
         $shippedContract->setExpireReceiveTime(new \DateTimeImmutable('+7 days'));
 
@@ -76,7 +76,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $receivedContract->setState(OrderState::RECEIVED);
         $receivedContract->setOutTradeNo('OUT' . time() . '004');
         $receivedContract->setRemark('测试已完成订单');
-        $receivedContract->setUser($this->createMockUser());
+        $receivedContract->setUser($this->getOrCreateTestUser());
         $receivedContract->setFinishTime(new \DateTimeImmutable('-1 day'));
 
         $manager->persist($receivedContract);
@@ -90,7 +90,7 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $canceledContract->setRemark('测试已取消订单');
         $canceledContract->setCancelReason('用户主动取消');
         $canceledContract->setCancelTime(new \DateTimeImmutable('-2 hours'));
-        $canceledContract->setUser($this->createMockUser());
+        $canceledContract->setUser($this->getOrCreateTestUser());
 
         $manager->persist($canceledContract);
 
@@ -104,20 +104,31 @@ class ContractFixtures extends Fixture implements FixtureGroupInterface
         $this->addReference(self::CONTRACT_CANCELED, $canceledContract);
     }
 
-    private function createMockUser(): ?UserInterface
+    private function getOrCreateTestUser(): ?UserInterface
     {
-        /** @var class-string $userClass */
-        $userClass = $this->resolveTargetEntityService->findEntityClass(UserInterface::class);
-        $rand = rand(1, 9);
+        try {
+            $userIdentifier = 'test-user-' . rand(1, 9);
 
-        if ($this->hasReference("user-{$rand}", $userClass)) {
-            $user = $this->getReference("user-{$rand}", $userClass);
+            // 尝试加载已存在的用户
+            $user = $this->userManager->loadUserByIdentifier($userIdentifier);
             if ($user instanceof UserInterface) {
                 return $user;
             }
+        } catch (\Exception $e) {
+            // 用户不存在，需要创建
         }
 
-        return null;
+        try {
+            // 创建新的测试用户
+            return $this->userManager->createUser(
+                userIdentifier: 'test-user-' . rand(1, 9),
+                nickName: '测试用户',
+                roles: ['ROLE_USER']
+            );
+        } catch (\Exception $e) {
+            // 创建用户失败，返回 null 让合同创建时跳过用户关联
+            return null;
+        }
     }
 
     public static function getGroups(): array

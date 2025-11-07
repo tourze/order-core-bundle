@@ -69,11 +69,15 @@ final class OrderPayOrderCrudControllerTest extends AbstractEasyAdminControllerT
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getService(EntityManagerInterface::class);
 
+        // 创建测试用户（符合 TestUserInterface 类型）
+        $user = $this->createNormalUser('testuser_payorder', 'password');
+
         // 创建测试用的Contract实体
         $contract = new Contract();
         $contract->setSn('TEST-CONTRACT-' . uniqid());
         $contract->setState(OrderState::INIT);
         $contract->setRemark('Test contract for PayOrder validation');
+        $contract->setUser($user);
         $entityManager->persist($contract);
         $entityManager->flush();
 

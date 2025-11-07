@@ -63,7 +63,7 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
     private ?string $type = null;
 
     #[Groups(groups: ['admin_curd'])]
-    #[ORM\ManyToOne(cascade: ['persist'])]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class, cascade: ['persist'])]
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
     private ?UserInterface $user = null;
 

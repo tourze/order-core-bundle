@@ -103,6 +103,7 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
 
     #[Groups(groups: ['restful_read', 'admin_curd'])]
     #[TrackColumn]
+    #[Assert\Type(type: 'bool')]
     #[ORM\Column(type: Types::BOOLEAN, options: ['comment' => '是否赠品', 'default' => 0])]
     private bool $isGift = false;
 

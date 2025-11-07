@@ -104,4 +104,67 @@ final class OrderProductRepositoryTest extends AbstractRepositoryTestCase
         $this->assertGreaterThan(0, $entity1->getId(), 'First entity should have a positive ID');
         $this->assertGreaterThan(0, $entity2->getId(), 'Second entity should have a positive ID');
     }
+
+    public function testFindByContractAndSourceReturnsCorrectProducts(): void
+    {
+        // Arrange: 创建带商品来源的测试数据
+        $contract = $this->createNewEntity()->getContract();
+        $this->assertNotNull($contract, 'Contract should not be null');
+
+        $product1 = $this->createNewEntity();
+        $product1->setContract($contract);
+        $product1->setSource('normal');
+        $this->repository->save($product1);
+
+        $product2 = $this->createNewEntity();
+        $product2->setContract($contract);
+        $product2->setSource('coupon_gift');
+        $this->repository->save($product2);
+
+        // Act: 查找 normal 类型的商品
+        $normalProducts = $this->repository->findByContractAndSource($contract->getId(), 'normal');
+        $giftProducts = $this->repository->findByContractAndSource($contract->getId(), 'coupon_gift');
+
+        // Assert
+        $this->assertIsArray($normalProducts);
+        $this->assertIsArray($giftProducts);
+        $this->assertCount(1, $normalProducts);
+        $this->assertCount(1, $giftProducts);
+        $this->assertSame('normal', $normalProducts[0]->getSource());
+        $this->assertSame('coupon_gift', $giftProducts[0]->getSource());
+    }
+
+    public function testFindByContractGroupedBySourceReturnsGroupedProducts(): void
+    {
+        // Arrange: 创建不同来源的商品
+        $contract = $this->createNewEntity()->getContract();
+        $this->assertNotNull($contract, 'Contract should not be null');
+
+        $normalProduct = $this->createNewEntity();
+        $normalProduct->setContract($contract);
+        $normalProduct->setSource('normal');
+        $this->repository->save($normalProduct);
+
+        $giftProduct = $this->createNewEntity();
+        $giftProduct->setContract($contract);
+        $giftProduct->setSource('coupon_gift');
+        $this->repository->save($giftProduct);
+
+        $redeemProduct = $this->createNewEntity();
+        $redeemProduct->setContract($contract);
+        $redeemProduct->setSource('coupon_redeem');
+        $this->repository->save($redeemProduct);
+
+        // Act: 获取分组结果
+        $groupedProducts = $this->repository->findByContractGroupedBySource($contract->getId());
+
+        // Assert
+        $this->assertIsArray($groupedProducts);
+        $this->assertArrayHasKey('normal', $groupedProducts);
+        $this->assertArrayHasKey('coupon_gift', $groupedProducts);
+        $this->assertArrayHasKey('coupon_redeem', $groupedProducts);
+        $this->assertCount(1, $groupedProducts['normal']);
+        $this->assertCount(1, $groupedProducts['coupon_gift']);
+        $this->assertCount(1, $groupedProducts['coupon_redeem']);
+    }
 }

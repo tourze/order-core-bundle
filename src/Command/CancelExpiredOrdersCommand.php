@@ -18,7 +18,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Tourze\Symfony\CronJob\Attribute\AsCronTask;
-use Tourze\UserIDBundle\Model\SystemUser;
+use Tourze\UserServiceContracts\UserManagerInterface;
 
 #[AsCronTask(expression: '*/1 * * * *')]
 #[AsCommand(
@@ -34,6 +34,7 @@ final class CancelExpiredOrdersCommand extends Command
         private readonly ContractRepository $contractRepository,
         private readonly ContractService $contractService,
         private readonly LoggerInterface $logger,
+        private readonly UserManagerInterface $userManager,
     ) {
         parent::__construct();
     }
@@ -298,7 +299,14 @@ final class CancelExpiredOrdersCommand extends Command
             $order->getAutoCancelTime()?->format('Y-m-d H:i:s') ?? 'N/A'
         );
 
+        // Create a system user for automated operations
+        $systemUser = $this->userManager->createUser(
+            userIdentifier: 'system',
+            password: '',
+            roles: ['ROLE_SYSTEM']
+        );
+
         // Use ContractService to cancel the order, which will trigger events for stock release
-        $this->contractService->cancelOrder($order, SystemUser::instance(), $cancelReason);
+        $this->contractService->cancelOrder($order, $systemUser, $cancelReason);
     }
 }
