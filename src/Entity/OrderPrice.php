@@ -102,7 +102,7 @@ class OrderPrice implements \Stringable
 
     #[TrackColumn]
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true, enumType: PriceType::class, options: ['comment' => '类型'])]
-    #[Assert\Choice(choices: ['sale', 'cost', 'compete', 'freight', 'marketing', 'original_price'], message: '选择一个有效的价格类型')]
+    #[Assert\Choice(choices: ['sale', 'cost', 'compete', 'freight', 'marketing', 'original_price', 'coupon_discount'], message: '选择一个有效的价格类型')]
     #[Assert\NotNull]
     private PriceType $type;
 

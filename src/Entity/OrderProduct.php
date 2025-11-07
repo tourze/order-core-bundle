@@ -38,7 +38,7 @@ use Tourze\ProductCoreBundle\Entity\Spu;
  */
 #[ORM\Entity(repositoryClass: OrderProductRepository::class)]
 #[ORM\Table(name: 'order_contract_product', options: ['comment' => '订单合同产品表'])]
-#[ORM\UniqueConstraint(name: 'order_product_idx_uniq', columns: ['contract_id', 'sku_id'])]
+#[ORM\UniqueConstraint(name: 'order_product_idx_uniq', columns: ['contract_id', 'sku_id','is_gift'])]
 class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterface, LockEntity
 {
     use TimestampableAware;
@@ -101,6 +101,11 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true, options: ['comment' => '备注'])]
     private ?string $remark = null;
 
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[TrackColumn]
+    #[ORM\Column(type: Types::BOOLEAN, options: ['comment' => '是否赠品', 'default' => 0])]
+    private bool $isGift = false;
+
     /**
      * @var Collection<int, OrderPrice>
      */
@@ -111,7 +116,7 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
 
     #[TrackColumn]
     #[Assert\Length(max: 60)]
-    #[ORM\Column(length: 60, nullable: true, options: ['comment' => '产品来源'])]
+    #[ORM\Column(length: 60, nullable: true, options: ['comment' => '产品来源：normal(正常购买), coupon_gift(满赠赠品), coupon_redeem(兑换券赠品)'])]
     private ?string $source = null;
 
     #[Groups(groups: ['restful_read'])]
@@ -295,6 +300,24 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
         $this->contract = $contract;
     }
 
+    public function isGift(): bool
+    {
+        return $this->isGift;
+    }
+
+    /**
+     * 向后兼容旧命名
+     */
+    public function getIsGift(): bool
+    {
+        return $this->isGift();
+    }
+
+    public function setIsGift(bool $isGift): void
+    {
+        $this->isGift = $isGift;
+    }
+
     /**
      * 发货状态
      */
@@ -383,6 +406,42 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
     public function setSource(?string $source): void
     {
         $this->source = $source;
+    }
+
+    /**
+     * 是否为正常购买商品
+     */
+    public function isNormalPurchase(): bool
+    {
+        return null === $this->source || 'normal' === $this->source || '' === $this->source;
+    }
+
+    /**
+     * 是否为满赠赠品
+     */
+    public function isCouponGift(): bool
+    {
+        return 'coupon_gift' === $this->source;
+    }
+
+    /**
+     * 是否为兑换券赠品
+     */
+    public function isCouponRedeem(): bool
+    {
+        return 'coupon_redeem' === $this->source;
+    }
+
+    /**
+     * 获取商品类型标签（用于前端显示）
+     */
+    public function getTypeLabel(): string
+    {
+        return match ($this->source) {
+            'coupon_gift' => '满赠赠品',
+            'coupon_redeem' => '兑换券赠品',
+            default => '正常购买',
+        };
     }
 
     public function isAudited(): ?bool
@@ -585,6 +644,12 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
             'displayUnitPrice' => $this->getDisplayUnitPrice(),
             'displayUnitTaxPrice' => $this->getDisplayUnitTaxPrice(),
             'saleUnitPrice' => $this->getSaleUnitPrice(),
+            'isGift' => $this->isGift(),
+            'source' => $this->getSource(),
+            'typeLabel' => $this->getTypeLabel(),
+            'isNormalPurchase' => $this->isNormalPurchase(),
+            'isCouponGift' => $this->isCouponGift(),
+            'isCouponRedeem' => $this->isCouponRedeem(),
         ];
     }
 

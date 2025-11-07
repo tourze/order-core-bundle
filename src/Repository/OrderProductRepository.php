@@ -45,6 +45,57 @@ class OrderProductRepository extends ServiceEntityRepository
     }
 
     /**
+     * 根据订单和商品来源查找商品
+     *
+     * @param int $contractId 订单ID
+     * @param string $source 商品来源 (normal, coupon_gift, coupon_redeem)
+     * @return OrderProduct[]
+     */
+    public function findByContractAndSource(int $contractId, string $source): array
+    {
+        return $this->createQueryBuilder('op')
+            ->andWhere('op.contract = :contractId')
+            ->andWhere('op.source = :source')
+            ->setParameter('contractId', $contractId)
+            ->setParameter('source', $source)
+            ->orderBy('op.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * 根据订单分组查找商品（按类型分组）
+     *
+     * @param int $contractId 订单ID
+     * @return array<string, OrderProduct[]>
+     */
+    public function findByContractGroupedBySource(int $contractId): array
+    {
+        $products = $this->createQueryBuilder('op')
+            ->andWhere('op.contract = :contractId')
+            ->setParameter('contractId', $contractId)
+            ->orderBy('op.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $grouped = [
+            'normal' => [],
+            'coupon_gift' => [],
+            'coupon_redeem' => [],
+        ];
+
+        foreach ($products as $product) {
+            $source = $product->getSource() ?? 'normal';
+            if (!isset($grouped[$source])) {
+                $grouped[$source] = [];
+            }
+            $grouped[$source][] = $product;
+        }
+
+        return $grouped;
+    }
+
+    /**
      * 批量保存
      * @param array<OrderProduct> $entities
      */

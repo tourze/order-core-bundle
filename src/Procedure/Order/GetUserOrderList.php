@@ -349,7 +349,7 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
             $price = $product->getTotalPrice();
             $productInfo['sku_details'] = $this->formatSkuInfo($product->getSku());
             $productInfo['spu_details'] = $this->formatSpuInfo($product->getSpu());
-            $productInfo['price'] = $price;
+            $productInfo['price'] = number_format($price,2);
             $productInfo['mainThumb'] = $product->getSku()?->getMainThumb() ?? $product->getSpu()?->getMainPic() ?? null;
             $result[] = $productInfo;
         }
