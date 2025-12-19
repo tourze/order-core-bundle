@@ -67,7 +67,7 @@
     "tourze/gb-t-2261": "1.0.*",
     "tourze/http-client-bundle": "1.1.*",
     "tourze/json-rpc-core": "2.0.*",
-    "tourze/json-rpc-lock-bundle": "1.0.*",
+    "tourze/json-rpc-lock-bundle": "2.0.*",
     "tourze/json-rpc-log-bundle": "1.0.*",
     "tourze/json-rpc-paginator-bundle": "1.0.*",
     "tourze/json-rpc-security-bundle": "1.0.*",
