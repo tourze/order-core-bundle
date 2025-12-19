@@ -4,7 +4,7 @@ namespace OrderCoreBundle\Event;
 
 use Tourze\UserEventBundle\Event\UserInteractionEvent;
 
-class SupplierExpireAcceptOrderEvent extends UserInteractionEvent
+final class SupplierExpireAcceptOrderEvent extends UserInteractionEvent
 {
     use ContractAware;
 }

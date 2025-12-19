@@ -5,7 +5,7 @@ namespace OrderCoreBundle\Event;
 use OrderCoreBundle\Entity\OrderPrice;
 use Symfony\Contracts\EventDispatcher\Event;
 
-class BeforePriceRefundEvent extends Event
+final class BeforePriceRefundEvent extends Event
 {
     use ContractAware;
 

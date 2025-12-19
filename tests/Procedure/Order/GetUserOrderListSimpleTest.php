@@ -6,7 +6,7 @@ use OrderCoreBundle\Procedure\Order\GetUserOrderList;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Tourze\JsonRPC\Core\Domain\JsonRpcMethodInterface;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
  * @internal

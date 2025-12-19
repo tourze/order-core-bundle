@@ -4,7 +4,7 @@ namespace OrderCoreBundle\Exception;
 
 use RuntimeException;
 
-class FeatureMigratedException extends \RuntimeException
+final class FeatureMigratedException extends \RuntimeException
 {
     public function __construct(string $feature, string $newLocation, ?\Throwable $previous = null)
     {

@@ -8,13 +8,12 @@ use OrderCoreBundle\Entity\OrderContact;
 use OrderCoreBundle\Entity\OrderLog;
 use OrderCoreBundle\Entity\OrderPrice;
 use OrderCoreBundle\Entity\OrderProduct;
-use OrderCoreBundle\Entity\PayOrder;
 use Tourze\EasyAdminMenuBundle\Attribute\MenuProvider;
 use Tourze\EasyAdminMenuBundle\Service\LinkGeneratorInterface;
 use Tourze\EasyAdminMenuBundle\Service\MenuProviderInterface;
 
 #[MenuProvider]
-readonly class AdminMenu implements MenuProviderInterface
+final readonly class AdminMenu implements MenuProviderInterface
 {
     public function __construct(private ?LinkGeneratorInterface $linkGenerator = null)
     {
@@ -57,11 +56,6 @@ readonly class AdminMenu implements MenuProviderInterface
             $eCommerceMenu->addChild('订单日志')
                 ->setUri($this->linkGenerator->getCurdListPage(OrderLog::class))
                 ->setAttribute('icon', 'fas fa-history')
-            ;
-
-            $eCommerceMenu->addChild('支付订单')
-                ->setUri($this->linkGenerator->getCurdListPage(PayOrder::class))
-                ->setAttribute('icon', 'fas fa-credit-card')
             ;
         }
     }

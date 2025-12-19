@@ -2,7 +2,7 @@
 
 namespace OrderCoreBundle\DTO;
 
-class DeliveryOrderDTO
+final class DeliveryOrderDTO
 {
     private ?string $id = null;
 

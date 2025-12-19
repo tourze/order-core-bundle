@@ -13,7 +13,7 @@ use Tourze\ProductCoreBundle\Entity\Sku;
 
 #[Autoconfigure(public: true)]
 #[WithMonologChannel(channel: 'order_core')]
-class PriceService
+final class PriceService
 {
     public function __construct(
         // TODO: Uncomment when AppBundle is available

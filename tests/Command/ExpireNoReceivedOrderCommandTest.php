@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OrderCoreBundle\Tests\Command;
 
 use OrderCoreBundle\Command\ExpireNoReceivedOrderCommand;
-use OrderCoreBundle\Repository\ContractRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -20,14 +19,7 @@ final class ExpireNoReceivedOrderCommandTest extends AbstractCommandTestCase
 {
     protected function onSetUp(): void
     {
-        $contractRepository = $this->createMock(ContractRepository::class);
-
-        // Mock repository to return empty results
-        $contractRepository->method('findBy')->willReturn([]);
-
-        // Register only custom service mocks in container
-        $container = self::getContainer();
-        $container->set(ContractRepository::class, $contractRepository);
+        // No mock setup needed - using real container services
     }
 
     protected function getCommandTester(): CommandTester

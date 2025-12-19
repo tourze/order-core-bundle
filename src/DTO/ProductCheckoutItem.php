@@ -7,7 +7,7 @@ namespace OrderCoreBundle\DTO;
 /**
  * 产品结账项 DTO
  */
-readonly class ProductCheckoutItem
+final readonly class ProductCheckoutItem
 {
     /**
      * @param array<int, mixed> $attachments

@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 #[WithMonologChannel(channel: 'order_core')]
 #[Autoconfigure(public: true)]
-class NullDeliverOperation implements DeliverOperationInterface
+final class NullDeliverOperation implements DeliverOperationInterface
 {
     public function __construct(
         private readonly LoggerInterface $logger,

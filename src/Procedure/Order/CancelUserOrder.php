@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OrderCoreBundle\Procedure\Order;
 
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\CancelUserOrderParam;
 use OrderCoreBundle\Repository\ContractRepository;
 use OrderCoreBundle\Service\ContractService;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -10,12 +13,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Tourze\DoctrineEntityLockBundle\Service\EntityLockService;
 use Tourze\JsonRPC\Core\Attribute\MethodDoc;
 use Tourze\JsonRPC\Core\Attribute\MethodExpose;
-use Tourze\JsonRPC\Core\Attribute\MethodParam;
 use Tourze\JsonRPC\Core\Attribute\MethodTag;
-use Tourze\JsonRPC\Core\Domain\JsonRpcMethodInterface;
+use Tourze\JsonRPC\Core\Contracts\RpcParamInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
-use Tourze\JsonRPC\Core\Exception\JsonRpcException;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
 use Tourze\JsonRPCLockBundle\Procedure\LockableProcedure;
 use Tourze\JsonRPCLogBundle\Attribute\Log;
 use Tourze\JsonRPCLogBundle\Procedure\LogFormatProcedure;
@@ -25,14 +27,8 @@ use Tourze\JsonRPCLogBundle\Procedure\LogFormatProcedure;
 #[MethodExpose(method: 'CancelUserOrder')]
 #[IsGranted(attribute: 'IS_AUTHENTICATED_FULLY')]
 #[Log]
-class CancelUserOrder extends LockableProcedure implements LogFormatProcedure
+final class CancelUserOrder extends LockableProcedure implements LogFormatProcedure
 {
-    #[MethodParam(description: '订单ID')]
-    public string $contractId;
-
-    #[MethodParam(description: '取消原因')]
-    public ?string $cancelReason = null;
-
     public function __construct(
         private readonly ContractRepository $contractRepository,
         private readonly ContractService $contractService,
@@ -41,29 +37,31 @@ class CancelUserOrder extends LockableProcedure implements LogFormatProcedure
     ) {
     }
 
-    public function execute(): array
+    /**
+     * @phpstan-param CancelUserOrderParam $param
+     */
+    public function execute(CancelUserOrderParam|RpcParamInterface $param): ArrayResult
     {
         $contract = $this->contractRepository->findOneBy([
-            'id' => $this->contractId,
+            'id' => $param->contractId,
             'user' => $this->security->getUser(),
         ]);
         if (null === $contract) {
             throw new ApiException('找不到订单');
         }
 
-        /** @var array<string, mixed> */
-        return $this->entityLockService->lockEntity($contract, function () use ($contract): array {
+        return $this->entityLockService->lockEntity($contract, function () use ($contract, $param): ArrayResult {
             if (OrderState::CANCELED === $contract->getState()) {
-                return [
+                return new ArrayResult([
                     '__message' => '取消成功',
-                ];
+                ]);
             }
 
-            $this->contractService->cancelOrder($contract, $this->security->getUser(), $this->cancelReason);
+            $this->contractService->cancelOrder($contract, $this->security->getUser(), $param->cancelReason);
 
-            return [
+            return new ArrayResult([
                 '__message' => '取消成功',
-            ];
+            ]);
         });
     }
 

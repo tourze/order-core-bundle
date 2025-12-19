@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 
 #[When(env: 'test')]
 #[When(env: 'dev')]
-class OrderLogFixtures extends Fixture implements FixtureGroupInterface
+final class OrderLogFixtures extends Fixture implements FixtureGroupInterface
 {
     public static function getGroups(): array
     {

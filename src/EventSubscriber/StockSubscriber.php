@@ -14,7 +14,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Tourze\DoctrineEntityLockBundle\Service\EntityLockService;
-use Tourze\JsonRPC\Core\Exception\ApiException;
 use Tourze\LockServiceBundle\Model\LockEntity;
 use Tourze\StockManageBundle\Entity\StockLog;
 use Tourze\StockManageBundle\Enum\StockChange;
@@ -25,7 +24,7 @@ use Tourze\StockManageBundle\Service\StockService;
  */
 #[Autoconfigure(public: true)]
 #[WithMonologChannel(channel: 'order_core')]
-readonly class StockSubscriber
+final readonly class StockSubscriber
 {
     public function __construct(
         private LoggerInterface $logger,
@@ -36,8 +35,6 @@ readonly class StockSubscriber
 
     /**
      * 订单支付前，我们检查一下库存是否充足
-     *
-     * @throws ApiException
      */
     #[AsEventListener]
     public function onBeforeOrderCreated(BeforeOrderCreatedEvent $event): void

@@ -8,8 +8,9 @@ use OrderCoreBundle\Procedure\Order\UserCheckoutOrder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Tourze\JsonRPC\Core\Domain\JsonRpcMethodInterface;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
  * @internal
@@ -43,9 +44,10 @@ class UserCheckoutOrderSimpleTest extends AbstractProcedureTestCase
     public function testGenerateFormattedLogText(): void
     {
         $procedure = self::getService(UserCheckoutOrder::class);
-        $procedure->products = ['product1', 'product2'];
 
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.checkout');
+        $request->setParams(new JsonRpcParams(['products' => ['product1', 'product2']]));
         $result = $procedure->generateFormattedLogText($request);
 
         $this->assertStringContainsString('用户下单：商品数量=2', $result);

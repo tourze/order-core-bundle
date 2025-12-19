@@ -18,5 +18,7 @@ services:
     resource: '../../Procedure/'
   OrderCoreBundle\Service\:
     resource: '../../Service/'
+  OrderCoreBundle\Statistics\:
+    resource: '../../Statistics/'
 
   Tourze\YieldBreakableCaller\BreakableCaller: ~

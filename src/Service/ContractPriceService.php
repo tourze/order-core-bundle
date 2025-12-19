@@ -11,7 +11,7 @@ use OrderCoreBundle\Entity\OrderProduct;
  * 合同价格服务 - 重构以降低复杂度
  * 每个方法职责单一，复杂度 < 10
  */
-readonly class ContractPriceService
+final readonly class ContractPriceService
 {
     public function __construct(
         private PriceFormatter $formatter,

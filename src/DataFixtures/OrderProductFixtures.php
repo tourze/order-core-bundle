@@ -18,7 +18,7 @@ use Tourze\ProductCoreBundle\Enum\PriceType;
  */
 #[When(env: 'test')]
 #[When(env: 'dev')]
-class OrderProductFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
+final class OrderProductFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
 {
     public const ORDER_PRODUCT_PHONE = 'order-product-phone';
     public const ORDER_PRODUCT_LAPTOP = 'order-product-laptop';

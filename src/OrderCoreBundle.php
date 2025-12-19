@@ -10,8 +10,11 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Tourze\BundleDependency\BundleDependencyInterface;
 use Tourze\DoctrineAsyncInsertBundle\DoctrineAsyncInsertBundle;
 use Tourze\DoctrineIndexedBundle\DoctrineIndexedBundle;
+use Tourze\DoctrineIpBundle\DoctrineIpBundle;
 use Tourze\DoctrineSnowflakeBundle\DoctrineSnowflakeBundle;
 use Tourze\DoctrineTimestampBundle\DoctrineTimestampBundle;
+use Tourze\DoctrineTrackBundle\DoctrineTrackBundle;
+use Tourze\DoctrineUserBundle\DoctrineUserBundle;
 use Tourze\EasyAdminMenuBundle\EasyAdminMenuBundle;
 use Tourze\JsonRPCLockBundle\JsonRPCLockBundle;
 use Tourze\JsonRPCSecurityBundle\JsonRPCSecurityBundle;
@@ -24,7 +27,7 @@ use Tourze\TempFileBundle\TempFileBundle;
 /**
  * @see https://symfony.com/doc/current/bundles/prepend_extension.html
  */
-class OrderCoreBundle extends Bundle implements BundleDependencyInterface
+final class OrderCoreBundle extends Bundle implements BundleDependencyInterface
 {
     public static function getBundleDependencies(): array
     {
@@ -32,6 +35,9 @@ class OrderCoreBundle extends Bundle implements BundleDependencyInterface
             DoctrineSnowflakeBundle::class => ['all' => true],
             DoctrineTimestampBundle::class => ['all' => true],
             DoctrineIndexedBundle::class => ['all' => true],
+            DoctrineIpBundle::class => ['all' => true],
+            DoctrineTrackBundle::class => ['all' => true],
+            DoctrineUserBundle::class => ['all' => true],
             CronJobBundle::class => ['all' => true],
             JsonRPCLockBundle::class => ['all' => true],
             SecurityBundle::class => ['all' => true],

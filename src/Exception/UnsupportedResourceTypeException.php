@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class UnsupportedResourceTypeException extends \RuntimeException
+final class UnsupportedResourceTypeException extends \RuntimeException
 {
 }

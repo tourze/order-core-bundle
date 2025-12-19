@@ -8,7 +8,7 @@ use Symfony\Component\Routing\RouteCollection;
 use Tourze\RoutingAutoLoaderBundle\Service\RoutingAutoLoaderInterface;
 
 #[AutoconfigureTag(name: 'routing.loader')]
-class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInterface
+final class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInterface
 {
     public function __construct()
     {

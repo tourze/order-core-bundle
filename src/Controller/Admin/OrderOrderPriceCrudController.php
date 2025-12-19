@@ -79,7 +79,6 @@ final class OrderOrderPriceCrudController extends AbstractCrudController
         yield BooleanField::new('canRefund', '是否可退款');
         yield BooleanField::new('refund', '是否已退款');
         yield TextareaField::new('remark', '备注');
-        yield AssociationField::new('skuPrice', 'SKU价格')->hideOnForm();
         yield DateTimeField::new('createTime', '创建时间')
             ->hideOnForm()
             ->setFormat('yyyy-MM-dd HH:mm:ss')

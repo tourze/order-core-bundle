@@ -13,7 +13,7 @@ use Tourze\ProductCoreBundle\Entity\Sku;
 use Tourze\ProductCoreBundle\Service\SkuService;
 
 #[AsCommand(name: self::NAME, description: '同步sku真实销量')]
-class SyncSkuSalesRealTotalCommand extends Command
+final class SyncSkuSalesRealTotalCommand extends Command
 {
     public const NAME = 'order:sync-sku-sales-real-total';
 

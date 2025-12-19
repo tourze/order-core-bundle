@@ -12,7 +12,9 @@ use OrderCoreBundle\Entity\OrderLog;
 use OrderCoreBundle\Entity\OrderPrice;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Event\AfterOrderProductRefundEvent;
 use OrderCoreBundle\Event\AfterPriceRefundEvent;
+use OrderCoreBundle\Event\BeforeOrderProductRefundEvent;
 use OrderCoreBundle\Event\BeforePriceRefundEvent;
 use OrderCoreBundle\Event\OrderReceivedEvent;
 use OrderCoreBundle\Exception\ContractNotFoundException;
@@ -31,7 +33,7 @@ use Tourze\Symfony\AopDoctrineBundle\Attribute\Transactional;
  */
 #[Autoconfigure(public: true)]
 #[WithMonologChannel(channel: 'order_core')]
-class OrderService
+final class OrderService
 {
     public function __construct(
         private readonly LoggerInterface $logger,
@@ -49,7 +51,17 @@ class OrderService
     public function refundOrder(Contract $order): void
     {
         foreach ($order->getProducts() as $product) {
+            $event = new BeforeOrderProductRefundEvent();
+            $event->setProduct($product);
+            $event->setContract($order);
+            $this->eventDispatcher->dispatch($event);
+
             $this->refundProduct($product);
+
+            $event = new AfterOrderProductRefundEvent();
+            $event->setProduct($product);
+            $event->setContract($order);
+            $this->eventDispatcher->dispatch($event);
         }
 
         // 有一些费用不跟订单相关的，我们最后退

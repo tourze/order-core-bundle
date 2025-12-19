@@ -12,7 +12,7 @@ use ReflectionException;
  *
  * 用于安全调用外部依赖包中可能不存在的方法
  */
-class ProductCoreServiceWrapper
+final class ProductCoreServiceWrapper
 {
     public function __construct(
         private readonly ?object $skuService = null,

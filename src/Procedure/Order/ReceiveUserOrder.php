@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OrderCoreBundle\Procedure\Order;
 
+use OrderCoreBundle\Param\Order\ReceiveUserOrderParam;
 use OrderCoreBundle\Repository\ContractRepository;
 use OrderCoreBundle\Service\OrderService;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -9,11 +12,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Tourze\DoctrineEntityLockBundle\Service\EntityLockService;
 use Tourze\JsonRPC\Core\Attribute\MethodDoc;
 use Tourze\JsonRPC\Core\Attribute\MethodExpose;
-use Tourze\JsonRPC\Core\Attribute\MethodParam;
 use Tourze\JsonRPC\Core\Attribute\MethodTag;
+use Tourze\JsonRPC\Core\Contracts\RpcParamInterface;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
 use Tourze\JsonRPC\Core\Domain\JsonRpcMethodInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
-use Tourze\JsonRPC\Core\Exception\JsonRpcException;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPCLockBundle\Procedure\LockableProcedure;
 use Tourze\JsonRPCLogBundle\Attribute\Log;
@@ -23,11 +26,8 @@ use Tourze\JsonRPCLogBundle\Attribute\Log;
 #[MethodExpose(method: 'ReceiveUserOrder')]
 #[IsGranted(attribute: 'IS_AUTHENTICATED_FULLY')]
 #[Log]
-class ReceiveUserOrder extends LockableProcedure implements JsonRpcMethodInterface
+final class ReceiveUserOrder extends LockableProcedure implements JsonRpcMethodInterface
 {
-    #[MethodParam(description: '订单ID')]
-    public string $contractId;
-
     public function __construct(
         private readonly ContractRepository $contractRepository,
         private readonly OrderService $orderService,
@@ -36,17 +36,13 @@ class ReceiveUserOrder extends LockableProcedure implements JsonRpcMethodInterfa
     ) {
     }
 
-    public static function getMockResult(): ?array
-    {
-        return [
-            '__message' => '收货成功',
-        ];
-    }
-
-    public function execute(): array
+    /**
+     * @phpstan-param ReceiveUserOrderParam $param
+     */
+    public function execute(ReceiveUserOrderParam|RpcParamInterface $param): ArrayResult
     {
         $contract = $this->contractRepository->findOneBy([
-            'id' => $this->contractId,
+            'id' => $param->contractId,
             'user' => $this->security->getUser(),
         ]);
         if (null === $contract) {
@@ -57,9 +53,9 @@ class ReceiveUserOrder extends LockableProcedure implements JsonRpcMethodInterfa
             $this->orderService->receiveOrder($contract, $this->security->getUser());
         });
 
-        return [
+        return new ArrayResult([
             '__message' => '收货成功',
-        ];
+        ]);
     }
 
     public function generateFormattedLogText(JsonRpcRequest $request): string

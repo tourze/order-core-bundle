@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class OrderNotFoundException extends \RuntimeException
+final class OrderNotFoundException extends \RuntimeException
 {
 }

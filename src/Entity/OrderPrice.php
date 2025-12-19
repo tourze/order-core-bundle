@@ -14,11 +14,7 @@ use Tourze\DoctrineSnowflakeBundle\Traits\SnowflakeKeyAware;
 use Tourze\DoctrineTimestampBundle\Traits\TimestampableAware;
 use Tourze\DoctrineTrackBundle\Attribute\TrackColumn;
 use Tourze\DoctrineUserBundle\Traits\BlameableAware;
-use Tourze\ProductCoreBundle\Entity\Price;
 use Tourze\ProductCoreBundle\Enum\PriceType;
-
-// use Tourze\EasyAdmin\Attribute\Column\ExportColumn;
-// use Tourze\EasyAdmin\Attribute\Field\SelectField;
 
 /**
  * 这里记录的是订单的整体价格信息，包括优惠信息。
@@ -48,7 +44,6 @@ class OrderPrice implements \Stringable
     private string $name = '';
 
     #[TrackColumn]
-    // #[SelectField(targetEntity: CurrencyManager::class)]
     #[Groups(groups: ['restful_read', 'admin_curd'])]
     #[ORM\Column(type: Types::STRING, length: 10, options: ['default' => 'CNY', 'comment' => '币种'])]
     #[Assert\NotBlank]
@@ -105,10 +100,6 @@ class OrderPrice implements \Stringable
     #[Assert\Choice(choices: ['sale', 'cost', 'compete', 'freight', 'marketing', 'original_price', 'coupon_discount'], message: '选择一个有效的价格类型')]
     #[Assert\NotNull]
     private PriceType $type;
-
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(onDelete: 'SET NULL')]
-    private ?Price $skuPrice = null;
 
     #[Groups(groups: ['restful_read'])]
     #[ORM\Column(
@@ -243,28 +234,6 @@ class OrderPrice implements \Stringable
     public function setType(PriceType $type): void
     {
         $this->type = $type;
-    }
-
-    public function getSkuPrice(): ?Price
-    {
-        return $this->skuPrice;
-    }
-
-    public function setSkuPrice(?Price $skuPrice): void
-    {
-        $this->skuPrice = $skuPrice;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getListArray(): array
-    {
-        return [
-            'name' => $this->getName(),
-            'money' => $this->getMoney(),
-            'currency' => $this->getCurrency(),
-        ];
     }
 
     /**

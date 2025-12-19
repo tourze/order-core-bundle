@@ -9,7 +9,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 /**
  * 筛选订单状态事件
  */
-class OrderListStatusFilterEvent extends Event
+final class OrderListStatusFilterEvent extends Event
 {
     private ?QueryBuilder $queryBuilder = null;
 

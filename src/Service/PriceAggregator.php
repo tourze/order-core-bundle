@@ -6,7 +6,7 @@ namespace OrderCoreBundle\Service;
  * 价格聚合器 - 核心数据结构
  * 消除重复的聚合逻辑
  */
-class PriceAggregator
+final class PriceAggregator
 {
     /** @var array<string, array{money: float, tax: float}> */
     private array $currencyTotals = [];

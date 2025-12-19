@@ -14,8 +14,6 @@ use Tourze\DoctrineSnowflakeBundle\Traits\SnowflakeKeyAware;
 use Tourze\DoctrineTimestampBundle\Traits\CreateTimeAware;
 use Tourze\DoctrineUserBundle\Traits\BlameableAware;
 
-// use DoctrineEnhanceBundle\Traits\RemarkableAware; // Trait not found
-
 #[ORM\Entity(repositoryClass: OrderLogRepository::class, readOnly: true)]
 #[ORM\Table(name: 'order_log', options: ['comment' => '订单轨迹'])]
 class OrderLog implements \Stringable
@@ -24,7 +22,6 @@ class OrderLog implements \Stringable
     use BlameableAware;
     use SnowflakeKeyAware;
     use CreatedFromIpAware;
-    // use RemarkableAware; // Trait not found
 
     #[Ignore]
     #[ORM\ManyToOne(targetEntity: Contract::class, cascade: ['persist'], inversedBy: 'logs')]

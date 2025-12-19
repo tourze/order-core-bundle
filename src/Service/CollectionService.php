@@ -4,7 +4,7 @@ namespace OrderCoreBundle\Service;
 
 use Doctrine\Common\Collections\Collection;
 
-class CollectionService
+final class CollectionService
 {
     /**
      * @template T

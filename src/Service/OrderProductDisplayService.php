@@ -11,7 +11,7 @@ use OrderCoreBundle\Repository\OrderProductRepository;
  * 订单商品显示服务
  * 提供订单详情页商品分类显示的便利方法
  */
-class OrderProductDisplayService
+final class OrderProductDisplayService
 {
     public function __construct(
         private readonly OrderProductRepository $orderProductRepository,

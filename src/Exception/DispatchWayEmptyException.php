@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class DispatchWayEmptyException extends \Exception
+final class DispatchWayEmptyException extends \Exception
 {
 }

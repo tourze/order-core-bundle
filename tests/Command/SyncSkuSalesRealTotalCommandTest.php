@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace OrderCoreBundle\Tests\Command;
 
 use OrderCoreBundle\Command\SyncSkuSalesRealTotalCommand;
-use OrderCoreBundle\Repository\ContractRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Console\Tester\CommandTester;
 use Tourze\PHPUnitSymfonyKernelTest\AbstractCommandTestCase;
-use Tourze\ProductCoreBundle\Service\SkuService;
 
 /**
  * @internal
@@ -21,11 +19,6 @@ final class SyncSkuSalesRealTotalCommandTest extends AbstractCommandTestCase
 {
     protected function onSetUp(): void
     {
-        $contractRepository = $this->createMock(ContractRepository::class);
-
-        // Register only custom service mocks in container
-        $container = self::getContainer();
-        $container->set(ContractRepository::class, $contractRepository);
     }
 
     protected function getCommandTester(): CommandTester

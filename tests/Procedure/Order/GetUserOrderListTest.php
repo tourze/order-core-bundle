@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace OrderCoreBundle\Tests\Procedure\Order;
 
+use OrderCoreBundle\Param\Order\GetUserOrderListParam;
 use OrderCoreBundle\Procedure\Order\GetUserOrderList;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
  * @internal
@@ -34,13 +35,15 @@ class GetUserOrderListTest extends AbstractProcedureTestCase
         $user = $this->createNormalUser();
         $this->setAuthenticatedUser($user);
 
-        // 设置分页参数
-        $this->procedure->currentPage = 1;
-        $this->procedure->pageSize = 10;
+        // 创建 Param 对象
+        $param = new GetUserOrderListParam(
+            currentPage: 1,
+            pageSize: 10,
+        );
 
-        $result = $this->procedure->execute();
+        $result = $this->procedure->execute($param);
 
-        $this->assertIsArray($result);
+        // ArrayResult 实现了 ArrayAccess, 可以像数组一样访问
         $this->assertArrayHasKey('list', $result, '应该包含list字段');
         $this->assertArrayHasKey('pagination', $result, '应该包含pagination字段');
         $this->assertIsArray($result['list']);

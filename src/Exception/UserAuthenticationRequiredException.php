@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class UserAuthenticationRequiredException extends \RuntimeException
+final class UserAuthenticationRequiredException extends \RuntimeException
 {
 }

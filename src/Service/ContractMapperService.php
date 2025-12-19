@@ -7,7 +7,7 @@ use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderContact;
 use OrderCoreBundle\Entity\OrderProduct;
 
-class ContractMapperService
+final class ContractMapperService
 {
     public function __construct(
         private readonly ContractPriceService $priceService,

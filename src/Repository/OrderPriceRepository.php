@@ -11,7 +11,7 @@ use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
  * @extends ServiceEntityRepository<OrderPrice>
  */
 #[AsRepository(entityClass: OrderPrice::class)]
-class OrderPriceRepository extends ServiceEntityRepository
+final class OrderPriceRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

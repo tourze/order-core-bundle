@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OrderCoreBundle\Procedure\Order;
 
 use Doctrine\Common\Collections\Collection;
@@ -8,6 +10,7 @@ use OrderCoreBundle\Entity\OrderContact;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
 use OrderCoreBundle\Event\ViewOrderEvent;
+use OrderCoreBundle\Param\Order\GetOrderDetailParam;
 use OrderCoreBundle\Repository\ContractRepository;
 use OrderCoreBundle\Service\PriceService;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -16,12 +19,12 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Tourze\JsonRPC\Core\Attribute\MethodDoc;
 use Tourze\JsonRPC\Core\Attribute\MethodExpose;
-use Tourze\JsonRPC\Core\Attribute\MethodParam;
 use Tourze\JsonRPC\Core\Attribute\MethodTag;
+use Tourze\JsonRPC\Core\Contracts\RpcParamInterface;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
 use Tourze\JsonRPC\Core\Exception\ApiException;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPC\Core\Procedure\BaseProcedure;
-use Tourze\OrderContracts\Event\CheckOrderRefundableEvent;
 use Tourze\OrderContracts\Event\GetOrderDetailEvent;
 use Tourze\UserServiceContracts\UserManagerInterface;
 
@@ -29,11 +32,8 @@ use Tourze\UserServiceContracts\UserManagerInterface;
 #[MethodDoc(summary: '获取单个订单的信息')]
 #[MethodExpose(method: 'GetOrderDetail')]
 #[IsGranted(attribute: 'IS_AUTHENTICATED_FULLY')]
-class GetOrderDetail extends BaseProcedure
+final class GetOrderDetail extends BaseProcedure
 {
-    #[MethodParam(description: '订单ID或SN')]
-    public string $orderId = '';
-
     public function __construct(
         private readonly Security $security,
         private readonly ContractRepository $contractRepository,
@@ -44,18 +44,21 @@ class GetOrderDetail extends BaseProcedure
     ) {
     }
 
-    public function execute(): array
+    /**
+     * @phpstan-param GetOrderDetailParam $param
+     */
+    public function execute(GetOrderDetailParam|RpcParamInterface $param): ArrayResult
     {
-        if ('' === $this->orderId) {
+        if ('' === $param->orderId) {
             throw new ApiException('参数错误，订单ID不能为空');
         }
         $order = $this->contractRepository->findOneBy([
-            'id' => $this->orderId,
+            'id' => $param->orderId,
             'user' => $this->security->getUser(),
         ]);
         if (null === $order) {
             $order = $this->contractRepository->findOneBy([
-                'sn' => $this->orderId,
+                'sn' => $param->orderId,
                 'user' => $this->security->getUser(),
             ]);
         }
@@ -88,7 +91,7 @@ class GetOrderDetail extends BaseProcedure
         $event->setReceiver($systemUser);
         $this->eventDispatcher->dispatch($event);
 
-        return $event->getResult();
+        return new ArrayResult($event->getResult());
     }
 
     public function generateFormattedLogText(JsonRpcRequest $request): string

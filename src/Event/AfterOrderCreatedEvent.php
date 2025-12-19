@@ -4,7 +4,7 @@ namespace OrderCoreBundle\Event;
 
 use Symfony\Contracts\EventDispatcher\Event;
 
-class AfterOrderCreatedEvent extends Event
+final class AfterOrderCreatedEvent extends Event
 {
     use ContractAware;
 

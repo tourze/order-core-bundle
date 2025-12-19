@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class SendCouponFailedException extends \Exception
+final class SendCouponFailedException extends \Exception
 {
 }

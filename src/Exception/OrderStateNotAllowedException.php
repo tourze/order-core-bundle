@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class OrderStateNotAllowedException extends \RuntimeException
+final class OrderStateNotAllowedException extends \RuntimeException
 {
 }

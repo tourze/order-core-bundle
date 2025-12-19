@@ -38,7 +38,6 @@ final class OrderOrderPriceCrudControllerTest extends AbstractEasyAdminControlle
         yield '是否可退款' => ['是否可退款'];
         yield '是否已退款' => ['是否已退款'];
         yield '备注' => ['备注'];
-        yield 'SKU价格' => ['SKU价格'];
         yield '创建时间' => ['创建时间'];
         yield '更新时间' => ['更新时间'];
         yield '创建人' => ['创建人'];

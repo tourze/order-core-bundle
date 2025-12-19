@@ -9,7 +9,6 @@ use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Service\PriceFilter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Tourze\ProductCoreBundle\Enum\PriceType;
 
@@ -22,9 +21,7 @@ final class PriceFilterTest extends TestCase
     public function testIsFreightPriceWithFreightNameShouldReturnTrue(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn('运费');
-        $price->method('getType')->willReturn(PriceType::SALE);
+        $price = $this->createOrderPrice(name: '运费', type: PriceType::SALE);
 
         // Act
         $result = PriceFilter::isFreightPrice($price);
@@ -36,9 +33,7 @@ final class PriceFilterTest extends TestCase
     public function testIsFreightPriceWithFreightTypeShouldReturnTrue(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn('商品价格');
-        $price->method('getType')->willReturn(PriceType::FREIGHT);
+        $price = $this->createOrderPrice(name: '商品价格', type: PriceType::FREIGHT);
 
         // Act
         $result = PriceFilter::isFreightPrice($price);
@@ -50,9 +45,7 @@ final class PriceFilterTest extends TestCase
     public function testIsFreightPriceWithBothFreightNameAndTypeShouldReturnTrue(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn('运费');
-        $price->method('getType')->willReturn(PriceType::FREIGHT);
+        $price = $this->createOrderPrice(name: '运费', type: PriceType::FREIGHT);
 
         // Act
         $result = PriceFilter::isFreightPrice($price);
@@ -64,9 +57,7 @@ final class PriceFilterTest extends TestCase
     public function testIsFreightPriceWithNeitherFreightNameNorTypeShouldReturnFalse(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn('商品价格');
-        $price->method('getType')->willReturn(PriceType::SALE);
+        $price = $this->createOrderPrice(name: '商品价格', type: PriceType::SALE);
 
         // Act
         $result = PriceFilter::isFreightPrice($price);
@@ -79,9 +70,7 @@ final class PriceFilterTest extends TestCase
     public function testIsFreightPriceWithVariousNamesShouldMatchOnlyFreight(string $name, bool $expected): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn($name);
-        $price->method('getType')->willReturn(PriceType::SALE);
+        $price = $this->createOrderPrice(name: $name, type: PriceType::SALE);
 
         // Act
         $result = PriceFilter::isFreightPrice($price);
@@ -107,9 +96,9 @@ final class PriceFilterTest extends TestCase
     public function testHasProductWithExistingProductShouldReturnTrue(): void
     {
         // Arrange
-        $product = $this->createMock(OrderProduct::class);
-        $price = $this->createOrderPriceMock();
-        $price->method('getProduct')->willReturn($product);
+        $product = new OrderProduct();
+        $price = $this->createOrderPrice();
+        $price->setProduct($product);
 
         // Act
         $result = PriceFilter::hasProduct($price);
@@ -121,8 +110,8 @@ final class PriceFilterTest extends TestCase
     public function testHasProductWithNullProductShouldReturnFalse(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getProduct')->willReturn(null);
+        $price = $this->createOrderPrice();
+        $price->setProduct(null);
 
         // Act
         $result = PriceFilter::hasProduct($price);
@@ -134,8 +123,8 @@ final class PriceFilterTest extends TestCase
     public function testIsPaidWithTrueShouldReturnTrue(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('isPaid')->willReturn(true);
+        $price = $this->createOrderPrice();
+        $price->setPaid(true);
 
         // Act
         $result = PriceFilter::isPaid($price);
@@ -147,8 +136,8 @@ final class PriceFilterTest extends TestCase
     public function testIsPaidWithFalseShouldReturnFalse(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('isPaid')->willReturn(false);
+        $price = $this->createOrderPrice();
+        $price->setPaid(false);
 
         // Act
         $result = PriceFilter::isPaid($price);
@@ -160,8 +149,8 @@ final class PriceFilterTest extends TestCase
     public function testIsPaidWithNullShouldReturnFalse(): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('isPaid')->willReturn(null);
+        $price = $this->createOrderPrice();
+        $price->setPaid(null);
 
         // Act
         $result = PriceFilter::isPaid($price);
@@ -174,9 +163,9 @@ final class PriceFilterTest extends TestCase
     public function testIsPositiveWithPositiveAmountShouldReturnTrue(?string $money, ?string $tax): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getMoney')->willReturn($money);
-        $price->method('getTax')->willReturn($tax);
+        $price = $this->createOrderPrice();
+        $price->setMoney($money);
+        $price->setTax($tax);
 
         // Act
         $result = PriceFilter::isPositive($price);
@@ -204,9 +193,9 @@ final class PriceFilterTest extends TestCase
     public function testIsPositiveWithNonPositiveAmountShouldReturnFalse(?string $money, ?string $tax): void
     {
         // Arrange
-        $price = $this->createOrderPriceMock();
-        $price->method('getMoney')->willReturn($money);
-        $price->method('getTax')->willReturn($tax);
+        $price = $this->createOrderPrice();
+        $price->setMoney($money);
+        $price->setTax($tax);
 
         // Act
         $result = PriceFilter::isPositive($price);
@@ -232,9 +221,9 @@ final class PriceFilterTest extends TestCase
     public function testIsPositiveWithStringNumbersShouldHandleCorrectly(): void
     {
         // Arrange - 测试字符串数字转换
-        $price = $this->createOrderPriceMock();
-        $price->method('getMoney')->willReturn('123.45');
-        $price->method('getTax')->willReturn('67.89');
+        $price = $this->createOrderPrice();
+        $price->setMoney('123.45');
+        $price->setTax('67.89');
 
         // Act
         $result = PriceFilter::isPositive($price);
@@ -246,15 +235,13 @@ final class PriceFilterTest extends TestCase
     public function testFilterCombinationScenarioShouldWorkCorrectly(): void
     {
         // Arrange - 综合场景测试
-        $product = $this->createMock(OrderProduct::class);
+        $product = new OrderProduct();
 
-        $price = $this->createOrderPriceMock();
-        $price->method('getName')->willReturn('运费');
-        $price->method('getType')->willReturn(PriceType::FREIGHT);
-        $price->method('getProduct')->willReturn($product);
-        $price->method('isPaid')->willReturn(true);
-        $price->method('getMoney')->willReturn('15.00');
-        $price->method('getTax')->willReturn('1.50');
+        $price = $this->createOrderPrice(name: '运费', type: PriceType::FREIGHT);
+        $price->setProduct($product);
+        $price->setPaid(true);
+        $price->setMoney('15.00');
+        $price->setTax('1.50');
 
         // Act & Assert - 多条件组合检验
         $this->assertTrue(PriceFilter::isFreightPrice($price));
@@ -264,10 +251,14 @@ final class PriceFilterTest extends TestCase
     }
 
     /**
-     * 创建OrderPrice Mock对象
+     * 创建 OrderPrice 实例
      */
-    private function createOrderPriceMock(): MockObject&OrderPrice
+    private function createOrderPrice(string $name = 'Test Price', PriceType $type = PriceType::SALE): OrderPrice
     {
-        return $this->createMock(OrderPrice::class);
+        $price = new OrderPrice();
+        $price->setName($name);
+        $price->setType($type);
+
+        return $price;
     }
 }

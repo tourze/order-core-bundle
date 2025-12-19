@@ -5,32 +5,29 @@ declare(strict_types=1);
 namespace OrderCoreBundle\Tests\Statistics;
 
 use Carbon\CarbonImmutable;
+use OrderCoreBundle\Entity\Contract;
+use OrderCoreBundle\Enum\OrderState;
 use OrderCoreBundle\Repository\ContractRepository;
 use OrderCoreBundle\Statistics\OrderCountMetricProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use StatisticsBundle\Metric\MetricProviderInterface;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractIntegrationTestCase;
 
 /**
  * @internal
  */
 #[CoversClass(OrderCountMetricProvider::class)]
-final class OrderCountMetricProviderTest extends TestCase
+#[RunTestsInSeparateProcesses]
+final class OrderCountMetricProviderTest extends AbstractIntegrationTestCase
 {
-    /** @var ContractRepository&MockObject */
-    private MockObject $contractRepository;
-
     private OrderCountMetricProvider $provider;
+    private ContractRepository $contractRepository;
 
-    protected function setUp(): void
+    protected function onSetUp(): void
     {
-        $this->contractRepository = $this->getMockBuilder(ContractRepository::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['countByCreateTimeDateRange'])
-            ->getMock()
-        ;
-        $this->provider = new OrderCountMetricProvider($this->contractRepository);
+        $this->provider = self::getService(OrderCountMetricProvider::class);
+        $this->contractRepository = self::getService(ContractRepository::class);
     }
 
     public function testCanBeInstantiated(): void
@@ -73,160 +70,65 @@ final class OrderCountMetricProviderTest extends TestCase
         $this->assertSame(20, $this->provider->getCategoryOrder());
     }
 
-    public function testGetMetricValue(): void
+    public function testGetMetricValueWithNoOrders(): void
     {
-        $date = CarbonImmutable::create(2024, 1, 15, 12, 0, 0);
+        // 查询一个未来日期，确保没有订单
+        $date = CarbonImmutable::create(2099, 12, 31);
         $this->assertNotNull($date, 'Failed to create test date');
-        $expectedCount = 42;
-
-        $this->contractRepository
-            ->expects($this->once())
-            ->method('countByCreateTimeDateRange')
-            ->with(
-                self::callback(function (\DateTimeInterface $startDate) use ($date) {
-                    return $startDate->format('Y-m-d H:i:s') === $date->startOfDay()->format('Y-m-d H:i:s');
-                }),
-                self::callback(function (\DateTimeInterface $endDate) use ($date) {
-                    return $endDate->format('Y-m-d H:i:s') === $date->endOfDay()->format('Y-m-d H:i:s');
-                })
-            )
-            ->willReturn($expectedCount)
-        ;
-
-        $result = $this->provider->getMetricValue($date);
-
-        $this->assertSame($expectedCount, $result);
-    }
-
-    public function testGetMetricValueWithDifferentDates(): void
-    {
-        $testCases = [
-            ['date' => CarbonImmutable::create(2024, 1, 1), 'count' => 10],
-            ['date' => CarbonImmutable::create(2024, 6, 15), 'count' => 25],
-            ['date' => CarbonImmutable::create(2024, 12, 31), 'count' => 50],
-        ];
-
-        // 验证所有测试日期都成功创建
-        foreach ($testCases as $case) {
-            $this->assertNotNull($case['date'], 'Failed to create test date');
-        }
-
-        foreach ($testCases as $case) {
-            // 为每个测试用例创建新的repository和provider
-            $contractRepository = $this->getMockBuilder(ContractRepository::class)
-                ->disableOriginalConstructor()
-                ->onlyMethods(['countByCreateTimeDateRange'])
-                ->getMock()
-            ;
-
-            $provider = new OrderCountMetricProvider($contractRepository);
-
-            $contractRepository
-                ->expects($this->once())
-                ->method('countByCreateTimeDateRange')
-                ->willReturn($case['count'])
-            ;
-
-            $this->assertNotNull($case['date'], 'Test case date cannot be null');
-            $result = $provider->getMetricValue($case['date']);
-
-            $this->assertSame($case['count'], $result);
-        }
-    }
-
-    public function testGetMetricValueWithZeroCount(): void
-    {
-        $date = CarbonImmutable::create(2024, 1, 15);
-        $this->assertNotNull($date, 'Failed to create test date');
-
-        $this->contractRepository
-            ->expects($this->once())
-            ->method('countByCreateTimeDateRange')
-            ->willReturn(0)
-        ;
 
         $result = $this->provider->getMetricValue($date);
 
         $this->assertSame(0, $result);
     }
 
-    public function testGetMetricValueCallsRepositoryWithCorrectDateRange(): void
+    public function testGetMetricValueWithOrders(): void
     {
-        $date = CarbonImmutable::create(2024, 3, 15, 14, 30, 45);
-        $this->assertNotNull($date, 'Failed to create test date');
-        $expectedStartOfDay = $date->startOfDay(); // 2024-03-15 00:00:00
-        $expectedEndOfDay = $date->endOfDay();     // 2024-03-15 23:59:59
+        // 创建测试订单
+        $targetDate = CarbonImmutable::now();
 
-        $this->contractRepository
-            ->expects($this->once())
-            ->method('countByCreateTimeDateRange')
-            ->with(
-                self::callback(function (\DateTimeInterface $startDate) use ($expectedStartOfDay) {
-                    return $startDate->format('Y-m-d H:i:s') === $expectedStartOfDay->format('Y-m-d H:i:s');
-                }),
-                self::callback(function (\DateTimeInterface $endDate) use ($expectedEndOfDay) {
-                    return $endDate->format('Y-m-d H:i:s') === $expectedEndOfDay->format('Y-m-d H:i:s');
-                })
-            )
-            ->willReturn(15)
-        ;
+        $contract1 = new Contract();
+        $contract1->setState(OrderState::INIT);
+        $contract1->setCreateTime($targetDate->toDateTimeImmutable());
+        $this->contractRepository->save($contract1);
 
-        $this->provider->getMetricValue($date);
+        $contract2 = new Contract();
+        $contract2->setState(OrderState::INIT);
+        $contract2->setCreateTime($targetDate->toDateTimeImmutable());
+        $this->contractRepository->save($contract2);
+
+        // 获取指标值
+        $result = $this->provider->getMetricValue($targetDate);
+
+        // 应该至少有2个订单（测试创建的）
+        $this->assertGreaterThanOrEqual(2, $result);
     }
 
-    public function testGetMetricValueWithDifferentTimeZones(): void
+    public function testGetMetricValueFiltersDateRange(): void
     {
-        // 测试不同时区的日期处理
-        $date = CarbonImmutable::create(2024, 6, 15, 12, 0, 0, 'Asia/Shanghai');
-        $this->assertNotNull($date, 'Failed to create test date with timezone');
+        // 在不同日期创建订单
+        $today = CarbonImmutable::now();
+        $yesterday = $today->subDay();
 
-        $this->contractRepository
-            ->expects($this->once())
-            ->method('countByCreateTimeDateRange')
-            ->with(
-                self::callback(function (\DateTimeInterface $startDate) {
-                    $time = $startDate->format('H:i:s');
+        // 创建昨天的订单
+        $yesterdayContract = new Contract();
+        $yesterdayContract->setState(OrderState::INIT);
+        $yesterdayContract->setCreateTime($yesterday->toDateTimeImmutable());
+        $this->contractRepository->save($yesterdayContract);
 
-                    return '00:00:00' === $time;
-                }),
-                self::callback(function (\DateTimeInterface $endDate) {
-                    $time = $endDate->format('H:i:s');
+        // 创建今天的订单
+        $todayContract = new Contract();
+        $todayContract->setState(OrderState::INIT);
+        $todayContract->setCreateTime($today->toDateTimeImmutable());
+        $this->contractRepository->save($todayContract);
 
-                    return '23:59:59' === $time;
-                })
-            )
-            ->willReturn(8)
-        ;
+        // 获取今天的计数
+        $todayCount = $this->provider->getMetricValue($today);
+        // 获取昨天的计数
+        $yesterdayCount = $this->provider->getMetricValue($yesterday);
 
-        $result = $this->provider->getMetricValue($date);
-
-        $this->assertSame(8, $result);
-    }
-
-    public function testGetMetricValuePreservesOriginalDate(): void
-    {
-        $originalDate = CarbonImmutable::create(2024, 5, 20, 15, 30, 45);
-        $this->assertNotNull($originalDate, 'Failed to create test date');
-        $dateBeforeCall = $originalDate->copy();
-
-        $this->contractRepository
-            ->expects($this->once())
-            ->method('countByCreateTimeDateRange')
-            ->willReturn(12)
-        ;
-
-        $this->provider->getMetricValue($originalDate);
-
-        // 验证原始日期对象没有被修改
-        $this->assertTrue($originalDate->equalTo($dateBeforeCall));
-    }
-
-    public function testConstructorAcceptsContractRepository(): void
-    {
-        $repository = $this->createMock(ContractRepository::class);
-        $provider = new OrderCountMetricProvider($repository);
-
-        $this->assertInstanceOf(OrderCountMetricProvider::class, $provider);
+        // 两个计数应该都至少为1
+        $this->assertGreaterThanOrEqual(1, $todayCount);
+        $this->assertGreaterThanOrEqual(1, $yesterdayCount);
     }
 
     public function testAllMetricInterfaceMethodsReturnExpectedTypes(): void

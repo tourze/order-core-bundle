@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class OrderReceiveNotStartedException extends \RuntimeException
+final class OrderReceiveNotStartedException extends \RuntimeException
 {
 }

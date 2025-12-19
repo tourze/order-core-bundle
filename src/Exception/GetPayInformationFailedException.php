@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class GetPayInformationFailedException extends \Exception
+final class GetPayInformationFailedException extends \Exception
 {
 }

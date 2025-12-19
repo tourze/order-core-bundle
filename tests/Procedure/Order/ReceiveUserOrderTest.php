@@ -4,13 +4,16 @@ namespace OrderCoreBundle\Tests\Procedure\Order;
 
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\ReceiveUserOrderParam;
 use OrderCoreBundle\Procedure\Order\ReceiveUserOrder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
  * @internal
@@ -31,16 +34,6 @@ class ReceiveUserOrderTest extends AbstractProcedureTestCase
         $this->assertInstanceOf(ReceiveUserOrder::class, $this->procedure);
     }
 
-    public function testGetMockResult(): void
-    {
-        $result = ReceiveUserOrder::getMockResult();
-
-        $expected = [
-            '__message' => '收货成功',
-        ];
-        $this->assertEquals($expected, $result);
-    }
-
     public function testInvokeCallsExecute(): void
     {
         // 创建测试用户和订单数据
@@ -51,15 +44,19 @@ class ReceiveUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.receive');
+        $request->setParams(new JsonRpcParams([
+            'contractId' => (string) $contract->getId(),
+        ]));
 
         $result = $this->procedure->__invoke($request);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('收货成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('收货成功', $data['__message']);
     }
 
     public function testExecuteSuccessfullyReceivesOrder(): void
@@ -72,28 +69,33 @@ class ReceiveUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $result = $this->procedure->execute();
+        $param = new ReceiveUserOrderParam(
+            contractId: (string) $contract->getId(),
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
+        $this->assertInstanceOf(ArrayResult::class, $result);
         $this->assertArrayHasKey('__message', $result);
         $this->assertEquals('收货成功', $result['__message']);
     }
 
     public function testExecuteThrowsExceptionWhenContractNotFound(): void
     {
-        $this->procedure->contractId = 'nonexistent-contract';
+        $param = new ReceiveUserOrderParam(
+            contractId: 'nonexistent-contract',
+        );
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('找不到订单');
 
-        $this->procedure->execute();
+        $this->procedure->execute($param);
     }
 
     public function testGenerateFormattedLogTextReturnsCorrectMessage(): void
     {
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.receive');
         $result = $this->procedure->generateFormattedLogText($request);
 
         $this->assertEquals('确认收货', $result);

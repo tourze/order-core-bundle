@@ -5,7 +5,7 @@ namespace OrderCoreBundle\DTO;
 /**
  * 发货库存数据传输对象 - 解耦 order-core-bundle 与 deliver-order-bundle
  */
-class DeliveryStockDTO
+final class DeliveryStockDTO
 {
     public function __construct(
         private readonly int $id,

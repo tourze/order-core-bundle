@@ -5,13 +5,16 @@ namespace OrderCoreBundle\Tests\Procedure\Order;
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\CancelUserProductParam;
 use OrderCoreBundle\Procedure\Order\CancelUserProduct;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 use Tourze\ProductCoreBundle\Entity\Sku;
 use Tourze\ProductCoreBundle\Entity\Spu;
 use Tourze\StockManageBundle\Entity\StockBatch;
@@ -144,17 +147,21 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->productId = (string) $orderProduct->getId();
-        $this->procedure->cancelReason = 'test reason';
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.product.cancel');
+        $request->setParams(new JsonRpcParams([
+            'contractId' => (string) $contract->getId(),
+            'productId' => (string) $orderProduct->getId(),
+            'cancelReason' => 'test reason',
+        ]));
 
         $result = $this->procedure->__invoke($request);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 
     public function testExecuteSuccessfullyCancelsProductWithReason(): void
@@ -167,16 +174,19 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         // 设置认证用户
         $this->setAuthenticatedUser($user);
 
-        // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->productId = (string) $orderProduct->getId();
-        $this->procedure->cancelReason = 'customer request';
-        $result = $this->procedure->execute();
+        // 创建 Param 对象
+        $param = new CancelUserProductParam(
+            contractId: (string) $contract->getId(),
+            productId: (string) $orderProduct->getId(),
+            cancelReason: 'customer request',
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 
     public function testExecuteSuccessfullyCancelsProductWithoutReason(): void
@@ -189,16 +199,19 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         // 设置认证用户
         $this->setAuthenticatedUser($user);
 
-        // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->productId = (string) $orderProduct->getId();
-        $this->procedure->cancelReason = null;
-        $result = $this->procedure->execute();
+        // 创建 Param 对象
+        $param = new CancelUserProductParam(
+            contractId: (string) $contract->getId(),
+            productId: (string) $orderProduct->getId(),
+            cancelReason: null,
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 
     public function testExecuteThrowsExceptionWhenContractNotFound(): void
@@ -207,14 +220,16 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         $user = $this->createNormalUser('testuser4', 'password');
         $this->setAuthenticatedUser($user);
 
-        // 使用不存在的订单ID
-        $this->procedure->contractId = '99999';
-        $this->procedure->productId = '1';
+        // 创建 Param 对象
+        $param = new CancelUserProductParam(
+            contractId: '99999',
+            productId: '1',
+        );
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('找不到订单');
 
-        $this->procedure->execute();
+        $this->procedure->execute($param);
     }
 
     public function testExecuteThrowsExceptionWhenProductNotFound(): void
@@ -226,14 +241,16 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         // 设置认证用户
         $this->setAuthenticatedUser($user);
 
-        // 使用存在的订单但不存在的产品ID
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->productId = '99999';
+        // 创建 Param 对象
+        $param = new CancelUserProductParam(
+            contractId: (string) $contract->getId(),
+            productId: '99999',
+        );
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('找不到产品信息');
 
-        $this->procedure->execute();
+        $this->procedure->execute($param);
     }
 
     public function testExecuteWithEntityLockCallback(): void
@@ -246,14 +263,17 @@ class CancelUserProductTest extends AbstractProcedureTestCase
         // 设置认证用户
         $this->setAuthenticatedUser($user);
 
-        // 使用真实服务测试实体锁机制
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->productId = (string) $orderProduct->getId();
-        $result = $this->procedure->execute();
+        // 创建 Param 对象
+        $param = new CancelUserProductParam(
+            contractId: (string) $contract->getId(),
+            productId: (string) $orderProduct->getId(),
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证执行成功
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 }

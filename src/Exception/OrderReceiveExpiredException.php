@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class OrderReceiveExpiredException extends \RuntimeException
+final class OrderReceiveExpiredException extends \RuntimeException
 {
 }

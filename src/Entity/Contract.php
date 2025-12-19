@@ -85,21 +85,21 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
      * @var Collection<int, OrderContact>
      */
     #[Groups(groups: ['restful_read', 'admin_curd'])]
-    #[ORM\OneToMany(mappedBy: 'contract', targetEntity: OrderContact::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: OrderContact::class, mappedBy: 'contract', cascade: ['persist'], orphanRemoval: true)]
     private Collection $contacts;
 
     /**
      * @var Collection<int, OrderProduct>
      */
     #[Groups(groups: ['restful_read', 'admin_curd'])]
-    #[ORM\OneToMany(mappedBy: 'contract', targetEntity: OrderProduct::class, cascade: ['persist'], fetch: 'EXTRA_LAZY', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: OrderProduct::class, mappedBy: 'contract', cascade: ['persist'], fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $products;
 
     /**
      * @var Collection<int, OrderPrice>
      */
     #[Groups(groups: ['admin_curd'])]
-    #[ORM\OneToMany(mappedBy: 'contract', targetEntity: OrderPrice::class, cascade: ['persist'], fetch: 'EXTRA_LAZY', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: OrderPrice::class, mappedBy: 'contract', cascade: ['persist'], fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $prices;
 
     #[Assert\Length(max: 65535)]
@@ -111,7 +111,7 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
      * @var Collection<int, OrderLog>
      */
     #[Groups(groups: ['restful_read'])]
-    #[ORM\OneToMany(mappedBy: 'contract', targetEntity: OrderLog::class)]
+    #[ORM\OneToMany(targetEntity: OrderLog::class, mappedBy: 'contract')]
     private Collection $logs;
 
     #[Assert\DateTime]
@@ -149,20 +149,20 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => '发货时间'])]
     private ?\DateTimeInterface $shippedTime = null;
 
-    /**
-     * 支付订单信息
-     * 注意：这是OneToOne关联的反向端，不能用于数据库查询
-     * @internal 此字段仅用于对象关联，不支持在findBy/findOneBy查询中使用
-     */
-    #[Assert\Valid]
-    #[Groups(groups: ['restful_read', 'admin_curd'])]
-    #[ORM\OneToOne(targetEntity: PayOrder::class, mappedBy: 'contract')]
-    private ?PayOrder $payOrder = null;
+    #[Assert\DateTime]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => '支付时间'])]
+    private ?\DateTimeInterface $payTime = null;
 
     #[Assert\PositiveOrZero]
     #[Groups(groups: ['restful_read', 'admin_curd'])]
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true, options: ['comment' => '订单总金额（实际需要支付的价格）', 'default' => null])]
     private ?string $totalAmount = null;
+
+    #[Assert\PositiveOrZero]
+    #[IndexColumn]
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[ORM\Column(type: Types::INTEGER, nullable: true, options: ['comment' => '订单需要扣除的积分总数', 'default' => 0])]
+    private ?int $totalIntegral = 0;
 
     public function __construct()
     {
@@ -548,6 +548,7 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
             'state' => $this->getState(),
             'stateLabel' => $this->getState()->getLabel(),
             'totalAmount' => $this->getTotalAmount(),
+            'totalIntegral' => $this->getTotalIntegral(),
             'createTime' => $this->getCreateTime()?->format('Y-m-d H:i:s'),
             'updateTime' => $this->getUpdateTime()?->format('Y-m-d H:i:s'),
             'payTime' => $this->getPayTime()?->format('Y-m-d H:i:s'),
@@ -605,33 +606,14 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
         ];
     }
 
-    public function getPayOrder(): ?PayOrder
-    {
-        return $this->payOrder;
-    }
-
-    public function setPayOrder(?PayOrder $payOrder): void
-    {
-        // 处理旧的关联（如果存在）
-        if (null === $payOrder && null !== $this->payOrder) {
-            $this->payOrder->setContract(null);
-        }
-
-        // 设置新的关联
-        $this->payOrder = $payOrder;
-
-        // 确保双向关联的一致性（手动管理）
-        if (null !== $payOrder && $payOrder->getContract() !== $this) {
-            $payOrder->setContract($this);
-        }
-    }
-
-    /**
-     * 获取支付时间（从PayOrder中获取）
-     */
     public function getPayTime(): ?\DateTimeInterface
     {
-        return $this->payOrder?->getPayTime();
+        return $this->payTime;
+    }
+
+    public function setPayTime(?\DateTimeInterface $payTime): void
+    {
+        $this->payTime = $payTime;
     }
 
     public function getTotalAmount(): ?string
@@ -642,5 +624,15 @@ class Contract implements \Stringable, Itemable, PlainArrayInterface, ApiArrayIn
     public function setTotalAmount(?string $totalAmount): void
     {
         $this->totalAmount = $totalAmount;
+    }
+
+    public function getTotalIntegral(): ?int
+    {
+        return $this->totalIntegral;
+    }
+
+    public function setTotalIntegral(?int $totalIntegral): void
+    {
+        $this->totalIntegral = $totalIntegral;
     }
 }

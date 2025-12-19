@@ -6,7 +6,7 @@ namespace OrderCoreBundle\Service;
  * 价格格式化器 - 统一显示逻辑
  * 消除重复的格式化代码
  */
-class PriceFormatter
+final class PriceFormatter
 {
     private string $freeLabel;
 

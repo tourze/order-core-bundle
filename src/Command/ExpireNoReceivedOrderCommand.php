@@ -18,7 +18,7 @@ use Tourze\UserServiceContracts\UserManagerInterface;
 
 #[AsCronTask(expression: '*/15 * * * *')]
 #[AsCommand(name: self::NAME, description: '将发货但有结束收货时间的订单拉出来处理')]
-class ExpireNoReceivedOrderCommand extends Command
+final class ExpireNoReceivedOrderCommand extends Command
 {
     public const NAME = 'order:expire-no-received';
 

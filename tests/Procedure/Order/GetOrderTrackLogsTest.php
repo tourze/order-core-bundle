@@ -7,11 +7,12 @@ namespace OrderCoreBundle\Tests\Procedure\Order;
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\GetOrderTrackLogsParam;
 use OrderCoreBundle\Procedure\Order\GetOrderTrackLogs;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 use Tourze\ProductCoreBundle\Entity\Sku;
 use Tourze\ProductCoreBundle\Entity\Spu;
 
@@ -104,14 +105,20 @@ final class GetOrderTrackLogsTest extends AbstractProcedureTestCase
 
         $procedure = self::getService(GetOrderTrackLogs::class);
 
-        // 使用真实的订单ID
-        $procedure->orderId = $contract->getSn();
+        // 创建参数对象
+        $param = new GetOrderTrackLogsParam(
+            orderId: $contract->getSn(),
+        );
 
-        $result = $procedure->execute();
+        $result = $procedure->execute($param);
 
-        $this->assertIsArray($result);
+        $this->assertInstanceOf(\Tourze\JsonRPC\Core\Result\ArrayResult::class, $result);
+        $resultData = $result->toArray();
+        $this->assertIsArray($resultData);
+        $this->assertArrayHasKey('items', $resultData);
+
         // 验证返回的是物流追踪记录数组
-        foreach ($result as $trackLog) {
+        foreach ($resultData['items'] as $trackLog) {
             $this->assertIsArray($trackLog, '每条物流记录应该是数组格式');
         }
     }

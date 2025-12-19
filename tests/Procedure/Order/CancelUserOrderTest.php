@@ -4,13 +4,16 @@ namespace OrderCoreBundle\Tests\Procedure\Order;
 
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\CancelUserOrderParam;
 use OrderCoreBundle\Procedure\Order\CancelUserOrder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
  * @internal
@@ -63,16 +66,20 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->cancelReason = 'test reason';
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.cancel');
+        $request->setParams(new JsonRpcParams([
+            'contractId' => (string) $contract->getId(),
+            'cancelReason' => 'test reason',
+        ]));
 
         $result = $this->procedure->__invoke($request);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 
     public function testExecuteSuccessfullyCancelsOrderWithReason(): void
@@ -85,14 +92,17 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务测试带原因的取消
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->cancelReason = 'customer request';
-        $result = $this->procedure->execute();
+        $param = new CancelUserOrderParam(
+            contractId: (string) $contract->getId(),
+            cancelReason: 'customer request'
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
 
         // 验证订单状态已改变
         self::getEntityManager()->refresh($contract);
@@ -110,14 +120,17 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $this->procedure->cancelReason = null;
-        $result = $this->procedure->execute();
+        $param = new CancelUserOrderParam(
+            contractId: (string) $contract->getId(),
+            cancelReason: null
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
 
         // 验证订单状态已改变
         self::getEntityManager()->refresh($contract);
@@ -134,13 +147,16 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务进行集成测试
-        $this->procedure->contractId = (string) $contract->getId();
-        $result = $this->procedure->execute();
+        $param = new CancelUserOrderParam(
+            contractId: (string) $contract->getId()
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证结果结构
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
 
         // 验证订单状态仍然是取消状态
         self::getEntityManager()->refresh($contract);
@@ -154,17 +170,20 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用不存在的订单ID
-        $this->procedure->contractId = '99999';
+        $param = new CancelUserOrderParam(
+            contractId: '99999'
+        );
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('找不到订单');
 
-        $this->procedure->execute();
+        $this->procedure->execute($param);
     }
 
     public function testGenerateFormattedLogTextReturnsCorrectMessage(): void
     {
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.cancel');
         $result = $this->procedure->generateFormattedLogText($request);
 
         $this->assertEquals('消费者主动取消订单', $result);
@@ -180,12 +199,15 @@ class CancelUserOrderTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实服务测试实体锁机制
-        $this->procedure->contractId = (string) $contract->getId();
-        $result = $this->procedure->execute();
+        $param = new CancelUserOrderParam(
+            contractId: (string) $contract->getId()
+        );
+        $result = $this->procedure->execute($param);
 
         // 验证执行成功
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('__message', $result);
-        $this->assertEquals('取消成功', $result['__message']);
+        $this->assertInstanceOf(ArrayResult::class, $result);
+        $data = $result->toArray();
+        $this->assertArrayHasKey('__message', $data);
+        $this->assertEquals('取消成功', $data['__message']);
     }
 }

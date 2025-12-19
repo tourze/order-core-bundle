@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class BadRequestException extends \Exception
+final class BadRequestException extends \Exception
 {
 }

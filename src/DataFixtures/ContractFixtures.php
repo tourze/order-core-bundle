@@ -17,7 +17,7 @@ use Tourze\UserServiceContracts\UserManagerInterface;
  */
 #[When(env: 'test')]
 #[When(env: 'dev')]
-class ContractFixtures extends Fixture implements FixtureGroupInterface
+final class ContractFixtures extends Fixture implements FixtureGroupInterface
 {
     public const CONTRACT_PENDING = 'contract-pending';
     public const CONTRACT_PAID = 'contract-paid';

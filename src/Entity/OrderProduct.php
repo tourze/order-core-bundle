@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use OrderCoreBundle\Enum\AftersaleStatus;
 use OrderCoreBundle\Repository\OrderProductRepository;
 use OrderCoreBundle\Service\ContractPriceService;
 use OrderCoreBundle\Service\PriceCalculationHelper;
@@ -24,6 +25,7 @@ use Tourze\DoctrineUserBundle\Traits\BlameableAware;
 use Tourze\LockServiceBundle\Model\LockEntity;
 use Tourze\ProductCoreBundle\Entity\Sku;
 use Tourze\ProductCoreBundle\Entity\Spu;
+use Tourze\ProductCoreBundle\Enum\PriceType;
 
 /**
  * 订单商品
@@ -38,7 +40,7 @@ use Tourze\ProductCoreBundle\Entity\Spu;
  */
 #[ORM\Entity(repositoryClass: OrderProductRepository::class)]
 #[ORM\Table(name: 'order_contract_product', options: ['comment' => '订单合同产品表'])]
-#[ORM\UniqueConstraint(name: 'order_product_idx_uniq', columns: ['contract_id', 'sku_id','is_gift'])]
+#[ORM\UniqueConstraint(name: 'order_product_idx_uniq', columns: ['contract_id', 'sku_id', 'is_gift'])]
 class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterface, LockEntity
 {
     use TimestampableAware;
@@ -112,7 +114,7 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
      */
     #[Ignore]
     #[Groups(groups: ['restful_read'])]
-    #[ORM\OneToMany(mappedBy: 'product', targetEntity: OrderPrice::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(targetEntity: OrderPrice::class, mappedBy: 'product', fetch: 'EXTRA_LAZY')]
     private Collection $prices;
 
     #[TrackColumn]
@@ -172,6 +174,28 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
     #[Assert\Type(type: '\DateTimeInterface')]
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => '账单取消时间'])]
     private ?\DateTimeInterface $billCancelTime = null;
+
+    #[Assert\PositiveOrZero]
+    #[TrackColumn]
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[ORM\Column(type: Types::INTEGER, nullable: true, options: ['comment' => '商品积分价格', 'default' => 0])]
+    private ?int $integralPrice = 0;
+
+    #[Assert\Type(type: '\DateTimeInterface')]
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => '积分扣减时间'])]
+    private ?\DateTimeInterface $integralDeductedTime = null;
+
+    #[Assert\Type(type: '\DateTimeInterface')]
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => '积分返还时间'])]
+    private ?\DateTimeInterface $integralRefundedTime = null;
+
+    #[TrackColumn]
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true, enumType: AftersaleStatus::class, options: ['comment' => '售后状态', 'default' => 'normal'])]
+    #[Assert\Choice(callback: [AftersaleStatus::class, 'cases'], message: '请选择有效的售后状态')]
+    private ?AftersaleStatus $aftersaleStatus = AftersaleStatus::NORMAL;
 
     public function __construct()
     {
@@ -492,6 +516,27 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
     }
 
     /**
+     * 获取商品销售总价（仅SALE类型）
+     * 
+     * @return string 销售价格总和（使用bcmath计算，保留2位小数）
+     */
+    public function getTotalSalePrice(): string
+    {
+        $totalSalePrice = '0.00';
+        
+        foreach ($this->prices as $price) {
+            if ($price->getType() === PriceType::SALE) {
+                $money = $price->getMoney();
+                if (is_numeric($money)) {
+                    $totalSalePrice = bcadd($totalSalePrice, $money, 2);
+                }
+            }
+        }
+        
+        return $totalSalePrice;
+    }
+
+    /**
      * 总税费
      */
     public function getTotalTax(): float
@@ -603,6 +648,79 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
         $this->billCancelTime = $billCancelTime;
     }
 
+    public function getIntegralPrice(): ?int
+    {
+        return $this->integralPrice;
+    }
+
+    public function setIntegralPrice(?int $integralPrice): void
+    {
+        $this->integralPrice = $integralPrice;
+    }
+
+    public function getIntegralDeductedTime(): ?\DateTimeInterface
+    {
+        return $this->integralDeductedTime;
+    }
+
+    public function setIntegralDeductedTime(?\DateTimeInterface $integralDeductedTime): void
+    {
+        $this->integralDeductedTime = $integralDeductedTime;
+    }
+
+    public function getIntegralRefundedTime(): ?\DateTimeInterface
+    {
+        return $this->integralRefundedTime;
+    }
+
+    public function setIntegralRefundedTime(?\DateTimeInterface $integralRefundedTime): void
+    {
+        $this->integralRefundedTime = $integralRefundedTime;
+    }
+
+    public function getAftersaleStatus(): ?AftersaleStatus
+    {
+        return $this->aftersaleStatus;
+    }
+
+    public function setAftersaleStatus(?AftersaleStatus $aftersaleStatus): void
+    {
+        $this->aftersaleStatus = $aftersaleStatus;
+    }
+
+    /**
+     * 获取售后状态标签
+     */
+    #[Groups(groups: ['restful_read', 'admin_curd'])]
+    public function getAftersaleStatusLabel(): string
+    {
+        return $this->aftersaleStatus?->getLabel() ?? AftersaleStatus::NORMAL->getLabel();
+    }
+
+    /**
+     * 是否可以申请售后
+     */
+    public function canApplyAftersale(): bool
+    {
+        return $this->aftersaleStatus?->canApplyAftersale() ?? true;
+    }
+
+    /**
+     * 售后是否进行中
+     */
+    public function isAftersaleInProgress(): bool
+    {
+        return $this->aftersaleStatus?->isAftersaleInProgress() ?? false;
+    }
+
+    /**
+     * 售后是否已完成
+     */
+    public function isAftersaleCompleted(): bool
+    {
+        return $this->aftersaleStatus?->isAftersaleCompleted() ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -651,6 +769,11 @@ class OrderProduct implements \Stringable, PlainArrayInterface, ApiArrayInterfac
             'isNormalPurchase' => $this->isNormalPurchase(),
             'isCouponGift' => $this->isCouponGift(),
             'isCouponRedeem' => $this->isCouponRedeem(),
+            'aftersaleStatus' => $this->getAftersaleStatus()?->value,
+            'aftersaleStatusLabel' => $this->getAftersaleStatusLabel(),
+            'canApplyAftersale' => $this->canApplyAftersale(),
+            'isAftersaleInProgress' => $this->isAftersaleInProgress(),
+            'isAftersaleCompleted' => $this->isAftersaleCompleted(),
         ];
     }
 

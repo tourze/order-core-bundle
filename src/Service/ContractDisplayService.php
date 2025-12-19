@@ -8,7 +8,7 @@ use OrderCoreBundle\Entity\OrderPrice;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
 
-class ContractDisplayService
+final class ContractDisplayService
 {
     public function __construct(
         private readonly ?OrderProductDeliveryService $orderProductDeliveryService = null,

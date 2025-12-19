@@ -49,4 +49,28 @@ final class TrackLogSubscriberTest extends AbstractEventSubscriberTestCase
         $subscriber = self::getService(TrackLogSubscriber::class);
         $this->assertTrue(method_exists($subscriber, 'afterOrderReceived'));
     }
+
+    public function testAfterOrderCancel(): void
+    {
+        $subscriber = self::getService(TrackLogSubscriber::class);
+        $this->assertTrue(method_exists($subscriber, 'afterOrderCancel'));
+    }
+
+    public function testAfterOrderCreated(): void
+    {
+        $subscriber = self::getService(TrackLogSubscriber::class);
+        $this->assertTrue(method_exists($subscriber, 'afterOrderCreated'));
+    }
+
+    public function testAfterOrderPaid(): void
+    {
+        $subscriber = self::getService(TrackLogSubscriber::class);
+        $this->assertTrue(method_exists($subscriber, 'afterOrderPaid'));
+    }
+
+    public function testTrackOrderState(): void
+    {
+        $subscriber = self::getService(TrackLogSubscriber::class);
+        $this->assertTrue(method_exists($subscriber, 'trackOrderState'));
+    }
 }

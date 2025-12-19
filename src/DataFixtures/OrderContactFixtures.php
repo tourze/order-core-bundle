@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 
 #[When(env: 'test')]
 #[When(env: 'dev')]
-class OrderContactFixtures extends Fixture implements FixtureGroupInterface
+final class OrderContactFixtures extends Fixture implements FixtureGroupInterface
 {
     public static function getGroups(): array
     {

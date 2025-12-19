@@ -9,7 +9,7 @@ use Tourze\ProductCoreBundle\Enum\PriceType;
  * 价格筛选器 - 统一筛选逻辑
  * 消除重复的筛选条件
  */
-class PriceFilter
+final class PriceFilter
 {
     public static function isFreightPrice(OrderPrice $price): bool
     {

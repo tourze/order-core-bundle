@@ -9,7 +9,7 @@ use StatisticsBundle\Metric\MetricProviderInterface;
 /**
  * 订单数量指标提供者
  */
-class OrderCountMetricProvider implements MetricProviderInterface
+final class OrderCountMetricProvider implements MetricProviderInterface
 {
     public function __construct(private readonly ContractRepository $contractRepository)
     {

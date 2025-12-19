@@ -5,13 +5,15 @@ namespace OrderCoreBundle\Tests\Procedure\Order;
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
+use OrderCoreBundle\Param\Order\GetOrderDetailParam;
 use OrderCoreBundle\Procedure\Order\GetOrderDetail;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Tourze\JsonRPC\Core\Exception\ApiException;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 use Tourze\ProductCoreBundle\Entity\Sku;
 use Tourze\ProductCoreBundle\Entity\Spu;
 
@@ -104,13 +106,15 @@ class GetOrderDetailTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实的订单ID进行测试
-        $this->procedure->orderId = $contract->getSn();
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.detail');
+        $request->setParams(new JsonRpcParams(['orderId' => $contract->getSn()]));
 
         $result = $this->procedure->__invoke($request);
 
         // 验证结果结构
-        $this->assertIsArray($result);
+        $this->assertInstanceOf(\Tourze\JsonRPC\Core\Result\ArrayResult::class, $result);
+        $this->assertIsArray($result->data);
     }
 
     public function testExecuteReturnsOrderDetail(): void
@@ -124,38 +128,40 @@ class GetOrderDetailTest extends AbstractProcedureTestCase
         $this->setAuthenticatedUser($user);
 
         // 使用真实的订单ID进行测试
-        $this->procedure->orderId = $contract->getSn();
-        $result = $this->procedure->execute();
+        $param = new GetOrderDetailParam(orderId: $contract->getSn());
+        $result = $this->procedure->execute($param);
+        $data = $result->data;
 
         // 验证结果结构
-        $this->assertIsArray($result);
+        $this->assertIsArray($data);
 
         // 验证与 GetUserOrderList 一致的返回结构
-        $this->assertArrayHasKey('user', $result, '应包含用户信息');
-        $this->assertArrayHasKey('products', $result, '应包含商品信息');
-        $this->assertArrayHasKey('prices', $result, '应包含价格信息');
-        $this->assertArrayHasKey('contacts', $result, '应包含联系人信息');
-        $this->assertArrayHasKey('price', $result, '应包含总价信息');
+        $this->assertArrayHasKey('user', $data, '应包含用户信息');
+        $this->assertArrayHasKey('products', $data, '应包含商品信息');
+        $this->assertArrayHasKey('prices', $data, '应包含价格信息');
+        $this->assertArrayHasKey('contacts', $data, '应包含联系人信息');
+        $this->assertArrayHasKey('price', $data, '应包含总价信息');
 
         // 验证数组格式
-        $this->assertIsArray($result['products'], '商品信息应为数组');
-        $this->assertIsArray($result['prices'], '价格信息应为数组');
-        $this->assertIsArray($result['contacts'], '联系人信息应为数组');
+        $this->assertIsArray($data['products'], '商品信息应为数组');
+        $this->assertIsArray($data['prices'], '价格信息应为数组');
+        $this->assertIsArray($data['contacts'], '联系人信息应为数组');
     }
 
     public function testExecuteThrowsExceptionWhenContractNotFound(): void
     {
-        $this->procedure->orderId = 'nonexistent-order';
+        $param = new GetOrderDetailParam(orderId: 'nonexistent-order');
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('找不到订单');
 
-        $this->procedure->execute();
+        $this->procedure->execute($param);
     }
 
     public function testGenerateFormattedLogTextReturnsCorrectMessage(): void
     {
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = new JsonRpcRequest();
+        $request->setMethod('order.detail');
         $result = $this->procedure->generateFormattedLogText($request);
 
         $this->assertEquals('查看订单详情', $result);

@@ -5,7 +5,7 @@ namespace OrderCoreBundle\Event;
 use OrderCoreBundle\Entity\Contract;
 use Tourze\UserEventBundle\Event\UserInteractionEvent;
 
-class ViewOrderEvent extends UserInteractionEvent
+final class ViewOrderEvent extends UserInteractionEvent
 {
     /**
      * @var array<string, mixed> 订单查看结果数据

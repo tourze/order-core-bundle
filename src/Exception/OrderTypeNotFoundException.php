@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class OrderTypeNotFoundException extends \Exception
+final class OrderTypeNotFoundException extends \Exception
 {
 }

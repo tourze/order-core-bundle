@@ -4,7 +4,7 @@ namespace OrderCoreBundle\Service;
 
 use OrderCoreBundle\Entity\OrderProduct;
 
-class OrderProductDeliveryService
+final class OrderProductDeliveryService
 {
     public function __construct(
         private readonly DeliveryDataService $deliveryDataService,

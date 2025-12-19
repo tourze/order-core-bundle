@@ -13,7 +13,7 @@ use OrderCoreBundle\Repository\ContractRepository;
 /**
  * 每日订单数的统计
  */
-readonly class OrderDailyCounterProvider implements CounterProvider
+final readonly class OrderDailyCounterProvider implements CounterProvider
 {
     public function __construct(
         private ContractRepository $contractRepository,

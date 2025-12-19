@@ -2,7 +2,7 @@
 
 namespace OrderCoreBundle\Exception;
 
-class ContractNotFoundException extends \RuntimeException
+final class ContractNotFoundException extends \RuntimeException
 {
     public function __construct(string $message = 'Contract not found', int $code = 404, ?\Throwable $previous = null)
     {

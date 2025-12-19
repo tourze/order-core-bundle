@@ -5,7 +5,7 @@ namespace OrderCoreBundle\Service;
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderProduct;
 
-class ContractDataService
+final class ContractDataService
 {
     public function __construct(
         private readonly ?DeliveryDataService $deliveryDataService = null,

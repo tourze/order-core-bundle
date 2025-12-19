@@ -13,7 +13,7 @@ use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
  */
 #[Autoconfigure(public: true)]
 #[AsRepository(entityClass: Contract::class)]
-class ContractRepository extends ServiceEntityRepository
+final class ContractRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

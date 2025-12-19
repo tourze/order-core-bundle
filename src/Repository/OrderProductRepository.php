@@ -13,7 +13,7 @@ use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
  */
 #[AsRepository(entityClass: OrderProduct::class)]
 #[Autoconfigure(public: true)]
-class OrderProductRepository extends ServiceEntityRepository
+final class OrderProductRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

@@ -2,6 +2,6 @@
 
 namespace OrderCoreBundle\Exception;
 
-class SkuNotFoundException extends \RuntimeException
+final class SkuNotFoundException extends \RuntimeException
 {
 }

@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
  */
 #[When(env: 'test')]
 #[When(env: 'dev')]
-class OrderPriceFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
+final class OrderPriceFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
 {
     public const ORDER_PRICE_PHONE_PRODUCT = 'order-price-phone-product';
     public const ORDER_PRICE_LAPTOP_PRODUCT = 'order-price-laptop-product';

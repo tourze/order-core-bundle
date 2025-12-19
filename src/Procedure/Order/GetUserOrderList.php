@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OrderCoreBundle\Procedure\Order;
 
 use Carbon\CarbonImmutable;
@@ -8,10 +10,10 @@ use Doctrine\Common\Collections\Order;
 use Doctrine\ORM\QueryBuilder;
 use OrderCoreBundle\Entity\Contract;
 use OrderCoreBundle\Entity\OrderContact;
-use OrderCoreBundle\Entity\OrderPrice;
 use OrderCoreBundle\Entity\OrderProduct;
 use OrderCoreBundle\Enum\OrderState;
 use OrderCoreBundle\Event\OrderListStatusFilterEvent;
+use OrderCoreBundle\Param\Order\GetUserOrderListParam;
 use OrderCoreBundle\Repository\ContractRepository;
 use OrderCoreBundle\Service\PriceService;
 use OrderCoreBundle\Service\ProductCoreServiceWrapper;
@@ -21,10 +23,10 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Tourze\JsonRPC\Core\Attribute\MethodDoc;
 use Tourze\JsonRPC\Core\Attribute\MethodExpose;
-use Tourze\JsonRPC\Core\Attribute\MethodParam;
 use Tourze\JsonRPC\Core\Attribute\MethodTag;
+use Tourze\JsonRPC\Core\Contracts\RpcParamInterface;
+use Tourze\JsonRPC\Core\Result\ArrayResult;
 use Tourze\JsonRPC\Core\Domain\JsonRpcMethodInterface;
-use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPC\Core\Procedure\BaseProcedure;
 use Tourze\JsonRPCPaginatorBundle\Procedure\PaginatorTrait;
 
@@ -32,42 +34,9 @@ use Tourze\JsonRPCPaginatorBundle\Procedure\PaginatorTrait;
 #[MethodDoc(summary: '获取用户所有的订单列表')]
 #[MethodExpose(method: 'GetUserOrderList')]
 #[IsGranted(attribute: 'IS_AUTHENTICATED_FULLY')]
-class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
+final class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
 {
     use PaginatorTrait;
-
-    #[MethodParam(description: '订单编号')]
-    public string $orderSn = '';
-
-    #[MethodParam(description: '查询指定SPU ID的订单')]
-    public string $spuId = '';
-
-    #[MethodParam(description: '查询指定SKU ID的订单')]
-    public string $skuId = '';
-
-    /** @var array<string> SPU分类筛选 */
-    #[MethodParam(description: 'SPU分类筛选')]
-    public array $spuCategories = [];
-
-    /** @var array<string> SPU类型筛选 */
-    #[MethodParam(description: 'SPU类型筛选')]
-    public array $spuTypes = [];
-
-    /** @var array<string> 要过滤的订单状态列表 */
-    #[MethodParam(description: '要过滤的订单状态列表')]
-    public array $orderStates = [];
-
-    #[MethodParam(description: '状态筛选（最好前端控制状态，不这样使用）')]
-    public string $status = 'all';
-
-    #[MethodParam(description: '下单日期-开始')]
-    public string $createTimeBegin = '';
-
-    #[MethodParam(description: '下单日期-结束')]
-    public string $createTimeEnd = '';
-
-    #[MethodParam(description: '门店id')]
-    public string $storeId = '';
 
     public function __construct(
         private readonly Security $security,
@@ -79,15 +48,18 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
     ) {
     }
 
-    public function execute(): array
+    /**
+     * @phpstan-param GetUserOrderListParam $param
+     */
+    public function execute(GetUserOrderListParam|RpcParamInterface $param): ArrayResult
     {
         $qb = $this->createBaseQuery();
-        $this->applyProductFilters($qb);
-        $this->applyBasicFilters($qb);
-        $this->dispatchFilterEvent($qb);
-        $this->applyStatusFilter($qb);
+        $this->applyProductFilters($qb, $param);
+        $this->applyBasicFilters($qb, $param);
+        $this->dispatchFilterEvent($qb, $param);
+        $this->applyStatusFilter($qb, $param);
 
-        return $this->fetchList($qb, $this->formatItem(...));
+        return new ArrayResult($this->fetchList($qb, $this->formatItem(...), null, $param));
     }
 
     /**
@@ -106,24 +78,24 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
     /**
      * 应用产品筛选条件
      */
-    private function applyProductFilters(QueryBuilder $qb): void
+    private function applyProductFilters(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        $this->applySpuFilter($qb);
-        $this->applySkuFilter($qb);
-        $this->applySpuTypeFilter($qb);
+        $this->applySpuFilter($qb, $param);
+        $this->applySkuFilter($qb, $param);
+        $this->applySpuTypeFilter($qb, $param);
         // SPU分类筛选暂时未实现
     }
 
     /**
      * 应用SPU筛选
      */
-    private function applySpuFilter(QueryBuilder $qb): void
+    private function applySpuFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ('' === $this->spuId) {
+        if ('' === $param->spuId) {
             return;
         }
 
-        $spu = $this->productService->findSpuById($this->spuId);
+        $spu = $this->productService->findSpuById($param->spuId);
         if (null !== $spu) {
             $qb->join('a.products', 'pp');
             $qb->andWhere('pp.spu = :spu');
@@ -134,13 +106,13 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
     /**
      * 应用SKU筛选
      */
-    private function applySkuFilter(QueryBuilder $qb): void
+    private function applySkuFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ('' === $this->skuId) {
+        if ('' === $param->skuId) {
             return;
         }
 
-        $sku = $this->productService->findSkuById($this->skuId);
+        $sku = $this->productService->findSkuById($param->skuId);
         if (null !== $sku) {
             $qb->join('a.products', 'pk');
             $qb->andWhere('pk.sku = :sku');
@@ -151,106 +123,106 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
     /**
      * 应用SPU类型筛选
      */
-    private function applySpuTypeFilter(QueryBuilder $qb): void
+    private function applySpuTypeFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ([] === $this->spuTypes) {
+        if ([] === $param->spuTypes) {
             return;
         }
 
         $qb->join('a.products', 'p');
         $qb->join('p.spu', 's');
         $qb->where('s.type IN (:spuTypes)');
-        $qb->setParameter('spuTypes', $this->spuTypes);
+        $qb->setParameter('spuTypes', $param->spuTypes);
     }
 
     /**
      * 应用基础筛选条件
      */
-    private function applyBasicFilters(QueryBuilder $qb): void
+    private function applyBasicFilters(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        $this->applyOrderSnFilter($qb);
-        $this->applyTimeRangeFilter($qb);
-        $this->applyOrderStatesFilter($qb);
-        $this->applyStoreFilter($qb);
+        $this->applyOrderSnFilter($qb, $param);
+        $this->applyTimeRangeFilter($qb, $param);
+        $this->applyOrderStatesFilter($qb, $param);
+        $this->applyStoreFilter($qb, $param);
     }
 
     /**
      * 应用订单编号筛选
      */
-    private function applyOrderSnFilter(QueryBuilder $qb): void
+    private function applyOrderSnFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ('' !== $this->orderSn) {
+        if ('' !== $param->orderSn) {
             $qb->andWhere('a.sn LIKE :likeSN');
-            $qb->setParameter('likeSN', "%{$this->orderSn}%");
+            $qb->setParameter('likeSN', "%{$param->orderSn}%");
         }
     }
 
     /**
      * 应用时间范围筛选
      */
-    private function applyTimeRangeFilter(QueryBuilder $qb): void
+    private function applyTimeRangeFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ('' !== $this->createTimeBegin) {
+        if ('' !== $param->createTimeBegin) {
             $qb->andWhere('a.createTime > :createTimeBegin');
-            $qb->setParameter('createTimeBegin', CarbonImmutable::parse($this->createTimeBegin));
+            $qb->setParameter('createTimeBegin', CarbonImmutable::parse($param->createTimeBegin));
         }
 
-        if ('' !== $this->createTimeEnd) {
+        if ('' !== $param->createTimeEnd) {
             $qb->andWhere('a.createTime < :createTimeEnd');
-            $qb->setParameter('createTimeEnd', CarbonImmutable::parse($this->createTimeEnd));
+            $qb->setParameter('createTimeEnd', CarbonImmutable::parse($param->createTimeEnd));
         }
     }
 
     /**
      * 应用订单状态筛选
      */
-    private function applyOrderStatesFilter(QueryBuilder $qb): void
+    private function applyOrderStatesFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ([] !== $this->orderStates) {
+        if ([] !== $param->orderStates) {
             $qb->andWhere('a.state IN (:states)');
-            $qb->setParameter('states', $this->orderStates);
+            $qb->setParameter('states', $param->orderStates);
         }
     }
 
     /**
      * 应用门店筛选
      */
-    private function applyStoreFilter(QueryBuilder $qb): void
+    private function applyStoreFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
-        if ('' !== $this->storeId) {
+        if ('' !== $param->storeId) {
             $qb->andWhere('a.store = :store');
-            $qb->setParameter('store', $this->storeId);
+            $qb->setParameter('store', $param->storeId);
         }
     }
 
     /**
      * 分发筛选事件
      */
-    private function dispatchFilterEvent(QueryBuilder $qb): void
+    private function dispatchFilterEvent(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
         $event = new OrderListStatusFilterEvent();
         $event->setQueryBuilder($qb);
         $event->setUser($this->security->getUser());
-        $event->setStatus($this->status);
+        $event->setStatus($param->status);
         $this->eventDispatcher->dispatch($event);
     }
 
     /**
      * 应用状态筛选（消除特殊情况）
      */
-    private function applyStatusFilter(QueryBuilder $qb): void
+    private function applyStatusFilter(QueryBuilder $qb, GetUserOrderListParam $param): void
     {
         // 卸语句：不需要处理的情况
-        if ('all' === $this->status) {
+        if ('all' === $param->status) {
             return;
         }
 
         $statusMappings = $this->getStatusMappings();
-        if (!isset($statusMappings[$this->status])) {
+        if (!isset($statusMappings[$param->status])) {
             return;
         }
 
-        $states = $statusMappings[$this->status];
+        $states = $statusMappings[$param->status];
         if (1 === count($states)) {
             $qb->andWhere('a.state = :state');
             $qb->setParameter('state', $states[0]);
@@ -266,7 +238,7 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
     /** @return array<string, array<OrderState>> */
     private function getStatusMappings(): array
     {
-        return [
+        return new ArrayResult([
             'unpaid' => [
                 OrderState::AUDITING,
                 OrderState::INIT,
@@ -286,7 +258,7 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
                 OrderState::AFTERSALES_SUCCESS,
                 OrderState::AFTERSALES_FAILED,
             ],
-        ];
+        ]);
     }
 
     /** @return array<string, mixed> */
@@ -309,7 +281,7 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
         // 添加联系人/地址信息
         $result['contacts'] = $this->formatContactsInfo($item->getContacts());
 
-        return $result;
+        return new ArrayResult($result);
     }
 
     /** @return array<string, mixed>|null */
@@ -325,12 +297,12 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
         }
 
         // 只返回安全的用户信息，移除敏感数据
-        return [
+        return new ArrayResult([
             'id' => $userInfo['id'] ?? null,
             'username' => $userInfo['username'] ?? null,
             'email' => $userInfo['email'] ?? null,
             // 不返回密码等敏感信息
-        ];
+        ]);
     }
 
     /**
@@ -349,13 +321,14 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
             $price = $product->getTotalPrice();
             $productInfo['sku_details'] = $this->formatSkuInfo($product->getSku());
             $productInfo['spu_details'] = $this->formatSpuInfo($product->getSpu());
-            $productInfo['price'] = number_format($price,2);
+            $productInfo['integralPrice'] = $product->getIntegralPrice();
+            $productInfo['price'] = number_format($price, 2);
             $productInfo['mainThumb'] = $product->getSku()?->getMainThumb() ?? $product->getSpu()?->getMainPic() ?? null;
             $result[] = $productInfo;
         }
 
         /** @var array<int, array<string, mixed>> $result */
-        return $result;
+        return new ArrayResult($result);
     }
 
     /**
@@ -402,6 +375,6 @@ class GetUserOrderList extends BaseProcedure implements JsonRpcMethodInterface
             }
         }
 
-        return $result;
+        return new ArrayResult($result);
     }
 }

@@ -7,7 +7,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 /**
  * 订单被创建前，触发该事件
  */
-class BeforeOrderCreatedEvent extends Event
+final class BeforeOrderCreatedEvent extends Event
 {
     use ContractAware;
 

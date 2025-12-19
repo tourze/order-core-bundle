@@ -11,7 +11,7 @@ use StatisticsBundle\Metric\MetricProviderInterface;
 /**
  * 收入金额指标提供者
  */
-class RevenueMetricProvider implements MetricProviderInterface
+final class RevenueMetricProvider implements MetricProviderInterface
 {
     public function __construct(private readonly Connection $connection)
     {
