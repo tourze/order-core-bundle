@@ -86,7 +86,7 @@
     "tourze/symfony-dependency-service-loader": "1.0.*",
     "tourze/symfony-routing-auto-loader-bundle": "1.0.*",
     "tourze/symfony-snowflake-bundle": "1.0.*",
-    "tourze/symfony-temp-file-bundle": "1.0.*",
+    "tourze/symfony-temp-file-bundle": "1.1.*",
     "tourze/text-manage-bundle": "1.0.*",
     "tourze/user-event-bundle": "1.0.*",
     "tourze/user-id-bundle": "1.0.*",
