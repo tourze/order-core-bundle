@@ -77,7 +77,7 @@
     "tourze/product-core-bundle": "1.0.*",
     "tourze/rbac-core": "1.0.*",
     "tourze/resource-manage-bundle": "1.0.*",
-    "tourze/statistics-bundle": "1.0.*",
+    "tourze/statistics-bundle": "1.1.*",
     "tourze/stock-manage-bundle": "1.0.*",
     "tourze/symfony-aop-async-bundle": "1.0.*",
     "tourze/symfony-aop-bundle": "1.0.*",
